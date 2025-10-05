@@ -19,6 +19,7 @@ import AchievementsPanel from "./ui/achievements-panel"
 import LearningCenter from "./ui/learning-center"
 import FlowerPopup from "./ui/flower-popup"
 import InvestmentDetailPopup from "./ui/investment-detail-popup"
+import StatuePopup, { StatueType } from "./ui/statue-popup"
 import { PortfolioProvider, usePortfolio } from "@/context/portfolio-context"
 import { SocialProvider } from "@/context/social-context"
 import { StocksProvider } from "@/context/stocks-context"
@@ -38,13 +39,43 @@ function GardenExperienceContent() {
   const [investments, setInvestments] = useState<Investment[]>([])
   const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null)
   const [isAmountDialogOpen, setIsAmountDialogOpen] = useState(false)
+  const [activeStatue, setActiveStatue] = useState<StatueType | null>(null)
   const { spendMoney, refundMoney } = usePortfolio()
+
+  const exitPointerLockIfNeeded = () => {
+    if (typeof document !== "undefined" && document.pointerLockElement) {
+      document.exitPointerLock?.()
+    }
+  }
+
+  const handleFlowerClick = (flower: FlowerType) => {
+    exitPointerLockIfNeeded()
+    setActiveStatue(null)
+    setSelectedInvestment(null)
+    setActiveFlower(flower)
+  }
+
+  const handleInvestmentSelect = (investment: Investment) => {
+    exitPointerLockIfNeeded()
+    setActiveStatue(null)
+    setActiveFlower(null)
+    setSelectedInvestment(investment)
+  }
+
+  const handleStatueClick = (statue: StatueType) => {
+    exitPointerLockIfNeeded()
+    setActiveFlower(null)
+    setSelectedInvestment(null)
+    setIsAmountDialogOpen(false)
+    setActiveStatue(statue)
+  }
 
   const handleInvest = (id: number, name: string, type: "startup" | "cause" | "currency", amount: number) => {
     setInvestments((prev) => [...prev, { id, name, type, amount }])
     spendMoney(amount)
     setActiveFlower(null) // Close popup after investing
     setIsAmountDialogOpen(false) // Close amount dialog
+    setActiveStatue(null)
   }
 
   const handleRemoveInvestment = (id: number) => {
@@ -75,10 +106,11 @@ function GardenExperienceContent() {
         >
           <Suspense fallback={null}>
             <GardenScene
-              onFlowerClick={setActiveFlower}
-              controlsEnabled={!activeFlower && !selectedInvestment && !isAmountDialogOpen}
+              onFlowerClick={handleFlowerClick}
+              controlsEnabled={!activeFlower && !selectedInvestment && !isAmountDialogOpen && !activeStatue}
               investments={investments}
-              onInvestmentClick={(inv) => setSelectedInvestment(inv as any)}
+              onInvestmentClick={handleInvestmentSelect}
+              onStatueClick={handleStatueClick}
             />
           </Suspense>
         </Canvas>
@@ -118,6 +150,14 @@ function GardenExperienceContent() {
           investment={selectedInvestment}
           onClose={() => setSelectedInvestment(null)}
           onRemove={handleRemoveInvestment}
+        />
+      )}
+
+      {/* Statue Popups */}
+      {activeStatue && (
+        <StatuePopup
+          statueType={activeStatue}
+          onClose={() => setActiveStatue(null)}
         />
       )}
 

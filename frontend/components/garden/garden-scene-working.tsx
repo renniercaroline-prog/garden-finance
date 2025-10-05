@@ -3,6 +3,12 @@ import { Sky, Text, Html, Cloud } from "@react-three/drei"
 import { useRef, useMemo } from "react"
 import { useFrame } from "@react-three/fiber"
 import FirstPersonControls from "./controls/first-person-controls"
+import GrassField from "./environment/grass-field"
+import GardenHouse from "./structures/garden-house"
+import type { StatueType } from "./ui/statue-popup"
+import SerenityStatue from "./structures/statues/serenity-statue"
+import GrowthSpiralStatue from "./structures/statues/growth-spiral-statue"
+import BeaconObeliskStatue from "./structures/statues/beacon-obelisk-statue"
 import { usePortfolio } from "@/context/portfolio-context"
 import type { Holding } from "@/lib/types"
 import * as THREE from "three"
@@ -166,9 +172,16 @@ interface GardenSceneProps {
   controlsEnabled?: boolean
   investments?: Investment[]
   onInvestmentClick?: (investment: Investment) => void
+  onStatueClick?: (statue: StatueType) => void
 }
 
-export default function GardenScene({ onFlowerClick, controlsEnabled = true, investments = [], onInvestmentClick }: GardenSceneProps = {}) {
+export default function GardenScene({
+  onFlowerClick,
+  controlsEnabled = true,
+  investments = [],
+  onInvestmentClick,
+  onStatueClick,
+}: GardenSceneProps = {}) {
   const { portfolio } = usePortfolio()
 
   console.log("🌿 Garden Scene Rendering...")
@@ -197,13 +210,22 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
       <hemisphereLight args={["#87CEEB", "#6b8e4e", 0.6]} />
 
       {/* Ground */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="#6b8e4e" />
+        <meshStandardMaterial color="#3f5f2a" />
       </mesh>
+      <GrassField
+        size={80}
+        bladeCount={1800}
+        clearings={[
+          { x: 0, z: 12, width: 6, depth: 6 },
+          { x: 0, z: 0, width: 4, depth: 32 },
+          { x: 0, z: -5, width: 4, depth: 32 },
+        ]}
+      />
 
       {/* Garden Paths */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]} receiveShadow>
         <planeGeometry args={[3, 30]} />
         <meshStandardMaterial color="#c4b5a0" />
       </mesh>
@@ -223,6 +245,14 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
           <meshStandardMaterial color="#8B4513" />
         </mesh>
       </group>
+
+      {/* Gate house outside the entrance */}
+      <GardenHouse position={[0, 0, 22]} />
+
+      {/* Sculptures celebrating the garden themes */}
+      <SerenityStatue position={[-9, 0, 5]} onClick={() => onStatueClick?.("donation")} />
+      <GrowthSpiralStatue position={[10, 0, 4]} onClick={() => onStatueClick?.("startup")} />
+      <BeaconObeliskStatue position={[0, 0, -11]} onClick={() => onStatueClick?.("stocks")} />
 
       {/* Garden Fence */}
       {/* Front fence - left side of gate */}
@@ -865,4 +895,3 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
     </>
   )
 }
-
