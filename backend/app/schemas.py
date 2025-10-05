@@ -39,9 +39,14 @@ class AssetOut(BaseModel):
 
 # ---------- Portfolios & Holdings ----------
 class HoldingIn(BaseModel):
-    symbol: str
-    pct_weight: condecimal(ge=0)  # >= 0
-    since: Optional[date] = None
+    symbol: str | None = None
+    startup_id: UUID | None = None
+    pct_weight: condecimal(ge=0)
+    since: date | None = None
+
+    @property
+    def target_ok(self) -> bool:
+        return (self.symbol is None) ^ (self.startup_id is None)
 
 class HoldingOut(BaseModel):
     id: int
@@ -99,7 +104,8 @@ class FollowOut(BaseModel):
 class PostCreate(BaseModel):
     user_id: UUID
     text: str
-    referenced_symbols: Optional[List[str]] = Field(default_factory=list)
+    referenced_symbols: list[str] = Field(default_factory=list)
+    referenced_startups: list[UUID] = Field(default_factory=list)
 
 class PostOut(BaseModel):
     id: UUID
@@ -107,6 +113,7 @@ class PostOut(BaseModel):
     created_at: datetime
     text: str
     referenced_symbols: Optional[List[str]] = None
+    referenced_startups: Optional[List[UUID]] = None
     class Config:
         from_attributes = True
 
@@ -194,3 +201,87 @@ class FeedItem(BaseModel):
     post: PostOut
     author: ProfileOut
     inspiration_portfolio: PortfolioOut | None = None
+
+# Startups
+class StartupCreate(BaseModel):
+    name: str
+    slug: str | None = None
+    website: str | None = None
+    sector: str | None = None
+    country: str | None = None
+    description: str | None = None
+    women_led: bool = True
+    stage: str | None = "seed"
+    currency: str | None = "USD"
+    min_check_cents: int | None = None
+    valuation_cents: int | None = None
+    open_for_investment: bool = True
+
+class StartupOut(StartupCreate):
+    id: UUID
+    created_at: datetime
+    class Config: from_attributes = True
+
+class CauseCreate(BaseModel):
+  slug: str | None = None
+  name: str
+  description: str | None = None
+  category: str | None = None
+  country: str | None = None
+  sdg_tags: list[str] = Field(default_factory=list)
+  image_url: str | None = None
+  active: bool = True
+  target_amount_cents: int | None = None
+  deadline: datetime | None = None
+
+class CauseOut(CauseCreate):
+  id: UUID
+  created_at: datetime
+  # stats from view (optional in list)
+  total_cents: int | None = None
+  donors: int | None = None
+  last_30d_cents: int | None = None
+  progress_ratio: float | None = None
+  class Config: from_attributes = True
+
+class DonationCreate(BaseModel):
+  user_id: UUID
+  cause_id: UUID
+  club_id: UUID | None = None
+  amount_cents: int
+  currency: str = "GBP"
+  message: str | None = None
+
+class DonationOut(BaseModel):
+  id: UUID
+  user_id: UUID
+  cause_id: UUID
+  club_id: UUID | None
+  amount_cents: int
+  currency: str
+  message: str | None
+  status: str
+  created_at: datetime
+  class Config: from_attributes = True
+
+class RecurringDonationCreate(BaseModel):
+  user_id: UUID
+  cause_id: UUID
+  amount_cents: int
+  currency: str = "GBP"
+  interval: str = "monthly"  # weekly|monthly|quarterly|yearly
+  start_date: date | None = None
+
+class RecurringDonationOut(BaseModel):
+  id: UUID
+  user_id: UUID
+  cause_id: UUID
+  amount_cents: int
+  currency: str
+  interval: str
+  start_date: date
+  end_date: date | None
+  next_charge_at: datetime | None
+  active: bool
+  created_at: datetime
+  class Config: from_attributes = True

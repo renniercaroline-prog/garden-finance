@@ -35,25 +35,34 @@ def upsert_holdings(
     if not p:
         raise HTTPException(404, "Portfolio not found")
 
-    # naive upsert by (portfolio_id, symbol)
-    existing = {h.symbol: h for h in p.holdings}
+    existing = {(h.symbol, h.startup_id): h for h in p.holdings}
     out = []
+
     for h in holdings:
-        if h.symbol in existing:
-            existing[h.symbol].pct_weight = h.pct_weight
-            existing[h.symbol].since = h.since
-            out.append(existing[h.symbol])
+        # validate target
+        if not ((h.symbol is None) ^ (h.startup_id is None)):
+            raise HTTPException(400, "Provide either symbol OR startup_id (not both).")
+
+        key = (h.symbol, h.startup_id)
+
+        if key in existing:
+            row = existing[key]
+            row.pct_weight = h.pct_weight
+            row.since = h.since
+            out.append(row)
         else:
-            new_h = models.Holding(
+            row = models.Holding(
                 portfolio_id=portfolio_id,
                 symbol=h.symbol,
+                startup_id=h.startup_id,
                 pct_weight=h.pct_weight,
                 since=h.since,
             )
-            db.add(new_h)
-            out.append(new_h)
+            db.add(row)
+            out.append(row)
+
     db.commit()
-    # refresh
+    # reload
     p = db.query(models.Portfolio).options(selectinload(models.Portfolio.holdings)).get(portfolio_id)
     return p.holdings
 
