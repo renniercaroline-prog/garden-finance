@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from .routers import profiles, assets, portfolios, clubs, follows, posts, insights
-from .routers import community, inspiration, clubs_extras
+from .routers import community, inspiration, clubs_extras, donations, startups
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -41,6 +41,7 @@ app.include_router(follows.router)
 app.include_router(posts.router)
 app.include_router(insights.router)
 app.include_router(startups.router)
+app.include_router(donations.router)
 app.include_router(community.router)
 app.include_router(inspiration.router)
 app.include_router(clubs_extras.router)
