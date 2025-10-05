@@ -2,9 +2,10 @@
 
 interface GardenHouseProps {
   position: [number, number, number]
+  onClick?: () => void
 }
 
-export default function GardenHouse({ position }: GardenHouseProps) {
+export default function GardenHouse({ position, onClick }: GardenHouseProps) {
   // Rough proportions for a cozy entrance house with a gable-style roof
   const baseWidth = 5
   const baseHeight = 3
@@ -13,7 +14,23 @@ export default function GardenHouse({ position }: GardenHouseProps) {
   return (
     <group position={position}>
       {/* Main structure */}
-      <mesh position={[0, baseHeight / 2, 0]} castShadow receiveShadow>
+      <mesh 
+        position={[0, baseHeight / 2, 0]} 
+        castShadow 
+        receiveShadow
+        onClick={(e) => {
+          e.stopPropagation()
+          onClick?.()
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = 'pointer'
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = 'default'
+        }}
+      >
         <boxGeometry args={[baseWidth, baseHeight, baseDepth]} />
         <meshStandardMaterial color="#d8c5a6" roughness={0.75} />
       </mesh>

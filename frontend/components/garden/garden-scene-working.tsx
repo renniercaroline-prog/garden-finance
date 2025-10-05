@@ -173,6 +173,7 @@ interface GardenSceneProps {
   investments?: Investment[]
   onInvestmentClick?: (investment: Investment) => void
   onStatueClick?: (statue: StatueType) => void
+  onHouseClick?: () => void
 }
 
 export default function GardenScene({
@@ -181,6 +182,7 @@ export default function GardenScene({
   investments = [],
   onInvestmentClick,
   onStatueClick,
+  onHouseClick,
 }: GardenSceneProps = {}) {
   const { portfolio } = usePortfolio()
 
@@ -247,7 +249,7 @@ export default function GardenScene({
       </group>
 
       {/* Gate house outside the entrance */}
-      <GardenHouse position={[0, 0, 22]} />
+      <GardenHouse position={[0, 0, 22]} onClick={onHouseClick} />
 
       {/* Sculptures celebrating the garden themes */}
       <SerenityStatue position={[-9, 0, 5]} onClick={() => onStatueClick?.("donation")} />

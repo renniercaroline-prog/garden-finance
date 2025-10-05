@@ -184,15 +184,129 @@
 /* Cozy house background for portfolio page */
 .house-bg {
   background:
-    radial-gradient(1200px 400px at 50% -100px, rgba(0,0,0,0.06), transparent 60%),
-    linear-gradient( to bottom, rgba(255,255,255,0.6), rgba(255,255,255,0.6) ),
-    url('/placeholder.jpg');
-  background-size: auto, auto, cover;
-  background-position: center top, center, center;
-  backdrop-filter: blur(0.5px);
+    /* Soft vignette for cozy feel */
+    radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.15) 100%),
+    /* Wooden planks texture simulation */
+    repeating-linear-gradient(
+      90deg,
+      #8b6f47 0px,
+      #7a5c3a 2px,
+      #8b6f47 4px,
+      #9d7f56 6px,
+      #8b6f47 8px,
+      #8b6f47 100px,
+      #6e5335 100px,
+      #6e5335 102px,
+      #8b6f47 102px
+    ),
+    /* Wood grain effect */
+    linear-gradient(
+      to bottom,
+      #a0826d 0%,
+      #8b6f47 25%,
+      #7a5c3a 50%,
+      #8b6f47 75%,
+      #9d7f56 100%
+    );
+  background-size: 100% 100%, 100% 100%, 100% 100%;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+}
+
+.house-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    /* Wood knots and imperfections */
+    radial-gradient(circle at 20% 30%, rgba(94, 65, 47, 0.3) 0%, transparent 3%),
+    radial-gradient(circle at 80% 20%, rgba(94, 65, 47, 0.25) 0%, transparent 2%),
+    radial-gradient(circle at 40% 70%, rgba(94, 65, 47, 0.2) 0%, transparent 4%),
+    radial-gradient(circle at 70% 80%, rgba(94, 65, 47, 0.3) 0%, transparent 2.5%),
+    radial-gradient(circle at 15% 85%, rgba(94, 65, 47, 0.25) 0%, transparent 3%),
+    /* Subtle grain lines */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 3px
+    );
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.house-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    /* Warm ambient lighting overlay */
+    radial-gradient(circle at 50% 0%, rgba(255, 220, 180, 0.15) 0%, transparent 60%);
+  pointer-events: none;
 }
 
 .house-bg .card,
 .house-bg [data-slot="card"] {
-  background-color: rgba(255,255,255,0.9);
+  background-color: rgba(245, 235, 220, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(139, 111, 71, 0.2);
+  box-shadow: 
+    0 4px 6px rgba(94, 65, 47, 0.1),
+    0 2px 4px rgba(94, 65, 47, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  padding: 1.5rem;
+}
+
+.house-bg .card h3,
+.house-bg .card h4 {
+  color: rgb(88, 57, 39);
+}
+
+.house-bg table {
+  color: rgb(88, 57, 39);
+}
+
+.house-bg [role="tablist"] button {
+  color: rgb(120, 80, 60);
+  font-weight: 500;
+}
+
+.house-bg [role="tablist"] button[data-state="active"] {
+  background-color: rgba(139, 111, 71, 0.2);
+  color: rgb(88, 57, 39);
+  border-bottom: 2px solid rgb(139, 111, 71);
+}
+
+/* Add subtle paper/parchment texture to cards */
+.house-bg .card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(139, 111, 71, 0.02) 1px,
+      rgba(139, 111, 71, 0.02) 2px
+    );
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.house-bg .card > * {
+  position: relative;
+  z-index: 2;
 }

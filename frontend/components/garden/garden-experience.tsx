@@ -2,6 +2,7 @@
 
 import { Canvas } from "@react-three/fiber"
 import { Suspense, useState } from "react"
+import { useRouter } from "next/navigation"
 import GardenScene from "./garden-scene-working"
 import HUD from "./ui/hud"
 import LoadingScreen from "./ui/loading-screen"
@@ -20,6 +21,7 @@ import LearningCenter from "./ui/learning-center"
 import FlowerPopup from "./ui/flower-popup"
 import InvestmentDetailPopup from "./ui/investment-detail-popup"
 import StatuePopup, { StatueType } from "./ui/statue-popup"
+import HouseTransition from "./ui/house-transition"
 import { PortfolioProvider, usePortfolio } from "@/context/portfolio-context"
 import { SocialProvider } from "@/context/social-context"
 import { StocksProvider } from "@/context/stocks-context"
@@ -35,11 +37,13 @@ interface Investment {
 }
 
 function GardenExperienceContent() {
+  const router = useRouter()
   const [activeFlower, setActiveFlower] = useState<FlowerType>(null)
   const [investments, setInvestments] = useState<Investment[]>([])
   const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null)
   const [isAmountDialogOpen, setIsAmountDialogOpen] = useState(false)
   const [activeStatue, setActiveStatue] = useState<StatueType | null>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const { spendMoney, refundMoney } = usePortfolio()
 
   const exitPointerLockIfNeeded = () => {
@@ -68,6 +72,16 @@ function GardenExperienceContent() {
     setSelectedInvestment(null)
     setIsAmountDialogOpen(false)
     setActiveStatue(statue)
+  }
+
+  const handleHouseClick = () => {
+    exitPointerLockIfNeeded()
+    setIsTransitioning(true)
+    
+    // Wait for the fade-to-black animation to complete before navigating
+    setTimeout(() => {
+      router.push("/portfolio")
+    }, 1000) // Match the transition duration
   }
 
   const handleInvest = (id: number, name: string, type: "startup" | "cause" | "currency", amount: number) => {
@@ -111,6 +125,7 @@ function GardenExperienceContent() {
               investments={investments}
               onInvestmentClick={handleInvestmentSelect}
               onStatueClick={handleStatueClick}
+              onHouseClick={handleHouseClick}
             />
           </Suspense>
         </Canvas>
@@ -163,6 +178,9 @@ function GardenExperienceContent() {
 
       {/* Loading Screen */}
       <LoadingScreen />
+
+      {/* House Transition */}
+      <HouseTransition isTransitioning={isTransitioning} />
     </div>
   )
 }

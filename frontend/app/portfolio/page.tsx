@@ -77,19 +77,24 @@ function PortfolioDashboard() {
   const dailyPositive = portfolio.dailyChange >= 0
 
   return (
-    <div className="min-h-screen house-bg">
-      <div className="mx-auto w-full max-w-7xl px-6 py-10">
+    <div className="min-h-screen house-bg relative">
+      <div className="mx-auto w-full max-w-7xl px-6 py-10 relative z-10">
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full">
-              <Home className="h-5 w-5" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-800/20 border-2 border-amber-900/30 shadow-lg">
+              <Home className="h-6 w-6 text-amber-900" />
             </div>
             <div>
-              <h1 className="font-crimson text-3xl font-semibold leading-tight">Your House</h1>
-              <p className="text-muted-foreground text-sm">A cozy overview of your investments</p>
+              <h1 className="text-4xl font-bold leading-tight text-amber-950" style={{ fontFamily: 'Georgia, serif', textShadow: '0 1px 2px rgba(255,255,255,0.5)' }}>
+                Your Cozy House
+              </h1>
+              <p className="text-amber-900/70 text-sm font-medium">A warm overview of your investments</p>
             </div>
           </div>
-          <Link href="/" className="text-foreground/80 hover:text-foreground inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition-colors">
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 rounded-lg border-2 border-amber-900/30 bg-amber-800/10 px-4 py-2 text-sm font-medium text-amber-950 transition-all hover:bg-amber-800/20 hover:border-amber-900/40 shadow-md"
+          >
             <ArrowLeft className="h-4 w-4" /> Back to Garden
           </Link>
         </div>
