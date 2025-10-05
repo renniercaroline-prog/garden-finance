@@ -23,5 +23,8 @@ dist/
 # Logs
 *.log
 
+# cache
+frontend/.next/*
+
 # node modules
 */node_modules/
