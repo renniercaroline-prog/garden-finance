@@ -15,10 +15,6 @@ def club_mini_portfolio(
     normalize: bool = True,
     topk: int = Query(25, ge=1, le=200),
 ):
-    """
-    Aggregate member holdings into a transparent 'mini-portfolio'
-    (sum of weights per symbol; optionally normalized to sum=1).
-    """
     rows = db.execute(text("""
       with members as (select user_id from public.club_members where club_id = :cid),
       agg as (
@@ -37,15 +33,18 @@ def club_mini_portfolio(
     if not rows:
         return {"symbols": [], "normalized": False}
 
+    # Convert to dicts so we can add fields
+    rows_dict = [dict(r) for r in rows]
+
     if normalize:
-        s = sum([float(r["total_weight"]) for r in rows])
-        if s > 0:
-            for r in rows:
-                r["weight_norm"] = float(r["total_weight"]) / s
+        total = sum(float(r["total_weight"]) for r in rows_dict) or 0.0
+        if total > 0:
+            symbols = [{**r, "weight_norm": float(r["total_weight"]) / total} for r in rows_dict]
         else:
-            for r in rows:
-                r["weight_norm"] = 0.0
-    return {"symbols": rows, "normalized": normalize}
+            symbols = [{**r, "weight_norm": 0.0} for r in rows_dict]
+        return {"symbols": symbols, "normalized": True}
+
+    return {"symbols": rows_dict, "normalized": False}
 
 # ----- Goals -----
 
