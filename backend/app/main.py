@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import profiles, assets, portfolios, clubs, follows, posts, insights
+from .routers import profiles, assets, portfolios, clubs, startups, follows, posts, insights
 from .routers import community, inspiration, clubs_extras
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -40,8 +40,10 @@ app.include_router(clubs.router)
 app.include_router(follows.router)
 app.include_router(posts.router)
 app.include_router(insights.router)
-app.include_router(startups.router)
 app.include_router(community.router)
 app.include_router(inspiration.router)
 app.include_router(clubs_extras.router)
+app.include_router(startups.router)
+app.include_router(donations.router)
+app.include_router(yahoo.router)
 
