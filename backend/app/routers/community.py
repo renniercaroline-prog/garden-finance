@@ -1,6 +1,9 @@
+# app/routers/community.py
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, bindparam, String
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from uuid import UUID
 
 from ..db import get_db
@@ -17,21 +20,22 @@ def user_component(
     """
     Return the connected component for user_id in the thresholded user-user graph.
     """
-    sql = text(f"""
-    with edges as (
-      select u as a, v as b from public.user_user_similarity_mv where jaccard >= :thr
-      union all
-      select v as a, u as b from public.user_user_similarity_mv where jaccard >= :thr
+    sql = text("""
+    WITH RECURSIVE
+    edges AS (
+      SELECT u AS a, v AS b FROM public.user_user_similarity_mv WHERE jaccard >= :thr
+      UNION ALL
+      SELECT v AS a, u AS b FROM public.user_user_similarity_mv WHERE jaccard >= :thr
     ),
-    seed as (
-      select :uid::uuid as id
+    seed AS (
+      SELECT CAST(:uid AS uuid) AS id
     ),
-    reach(id) as (
-      select id from seed
-      union
-      select e.b from edges e join reach r on e.a = r.id
+    reach(id) AS (
+      SELECT id FROM seed
+      UNION
+      SELECT e.b FROM edges e JOIN reach r ON e.a = r.id
     )
-    select id from reach limit :maxn
+    SELECT id FROM reach LIMIT :maxn
     """)
     rows = db.execute(sql, {"uid": str(user_id), "thr": jaccard_min, "maxn": max_nodes}).all()
     return {"user_id": user_id, "component_user_ids": [r[0] for r in rows]}
@@ -44,61 +48,61 @@ def suggest_club_for_user(
     topk_users: int = Query(10, ge=1, le=100),
     topk_assets: int = Query(8, ge=1, le=50),
 ):
-    """
-    Suggest a new club: who to invite (top similar users from component)
-    and which theme/assets dominate that component.
-    """
-    # 1) component members
-    comp = db.execute(text("""
-      with edges as (
-        select u as a, v as b from public.user_user_similarity_mv where jaccard >= :thr
-        union all
-        select v as a, u as b from public.user_user_similarity_mv where jaccard >= :thr
+    # 1) component members (recursive CTE)
+    comp_sql = text("""
+      WITH RECURSIVE
+      edges AS (
+        SELECT u AS a, v AS b FROM public.user_user_similarity_mv WHERE jaccard >= :thr
+        UNION ALL
+        SELECT v AS a, u AS b FROM public.user_user_similarity_mv WHERE jaccard >= :thr
       ),
-      seed as ( select :uid::uuid as id ),
-      reach(id) as (
-        select id from seed
-        union
-        select e.b from edges e join reach r on e.a = r.id
+      seed AS (SELECT CAST(:uid AS uuid) AS id),
+      reach(id) AS (
+        SELECT id FROM seed
+        UNION
+        SELECT e.b FROM edges e JOIN reach r ON e.a = r.id
       )
-      select id from reach
-    """), {"uid": str(user_id), "thr": jaccard_min}).fetchall()
-    comp_users = [r[0] for r in comp]
+      SELECT id FROM reach
+    """)
+    comp_users = [r[0] for r in db.execute(comp_sql, {"uid": str(user_id), "thr": jaccard_min}).all()]
     if not comp_users:
         raise HTTPException(404, "No community found")
 
-    # 2) top similar users for invitations (exclude self)
-    sims = db.execute(text("""
-      select u, v, jaccard from (
-        select u, v, jaccard from public.user_user_similarity_mv where u = :uid
-        union all
-        select v as u, u as v, jaccard from public.user_user_similarity_mv where v = :uid
+    # 2) top similar users for invitations
+    sims_sql = text("""
+      SELECT u, v, jaccard FROM (
+        SELECT u, v, jaccard FROM public.user_user_similarity_mv WHERE u = :uid
+        UNION ALL
+        SELECT v AS u, u AS v, jaccard FROM public.user_user_similarity_mv WHERE v = :uid
       ) s
-      where v <> :uid
-      order by jaccard desc nulls last
-      limit :k
-    """), {"uid": str(user_id), "k": topk_users}).mappings().all()
+      WHERE v <> :uid
+      ORDER BY jaccard DESC NULLS LAST
+      LIMIT :k
+    """)
+    sims = db.execute(sims_sql, {"uid": str(user_id), "k": topk_users}).mappings().all()
 
-    # 3) dominant assets in component (aggregate holdings)
-    agg = db.execute(text("""
-      with comp_users as (select unnest(:uids::uuid[]) as user_id),
-      uh as (
-        select h.symbol, h.pct_weight
-        from public.holdings h
-        join public.portfolios p on p.id = h.portfolio_id
-        where p.user_id in (select user_id from comp_users)
+    # 3) dominant assets within the component (typed ARRAY(UUID) + ANY)
+    agg_sql = text("""
+      WITH uh AS (
+        SELECT h.symbol, h.pct_weight
+        FROM public.holdings h
+        JOIN public.portfolios p ON p.id = h.portfolio_id
+        WHERE p.user_id = ANY(:uids)
       )
-      select a.symbol, a.name, a.sector, sum(uh.pct_weight)::numeric as total_weight
-      from uh join public.assets a on a.symbol = uh.symbol
-      group by a.symbol, a.name, a.sector
-      order by total_weight desc
-      limit :ka
-    """), {"uids": comp_users, "ka": topk_assets}).mappings().all()
+      SELECT a.symbol, a.name, a.sector, SUM(uh.pct_weight)::numeric AS total_weight
+      FROM uh JOIN public.assets a ON a.symbol = uh.symbol
+      GROUP BY a.symbol, a.name, a.sector
+      ORDER BY total_weight DESC
+      LIMIT :ka
+    """).bindparams(
+        bindparam("uids", type_=ARRAY(PG_UUID(as_uuid=True))),
+    )
+    agg = db.execute(agg_sql, {"uids": comp_users, "ka": topk_assets}).mappings().all()
 
     return {
-        "suggested_invitees": sims,                  # [{u, v, jaccard}]
-        "dominant_assets": agg,                      # [{symbol, name, sector, total_weight}]
-        "suggested_theme": agg[0]["sector"] if agg else None
+        "suggested_invitees": sims,          # [{u, v, jaccard}]
+        "dominant_assets": agg,              # [{symbol, name, sector, total_weight}]
+        "suggested_theme": agg[0]["sector"] if agg else None,
     }
 
 @router.get("/club-recos/{club_id}")
@@ -108,45 +112,46 @@ def club_recommendations(
     topk_add: int = Query(10, ge=1, le=50),
     min_coholders: int = Query(2, ge=1, le=50),
 ):
-    """
-    Recommend assets for a club: find assets co-occurring with the club's current
-    aggregate holdings but underrepresented (diversification).
-    """
-    # club current symbols
-    current = db.execute(text("""
-      with members as (select user_id from public.club_members where club_id = :cid),
-      syms as (
-        select distinct h.symbol
-        from public.holdings h
-        join public.portfolios p on p.id = h.portfolio_id
-        where p.user_id in (select user_id from members)
+    # Current symbols owned by club members
+    cur_sql = text("""
+      WITH members AS (SELECT user_id FROM public.club_members WHERE club_id = :cid),
+      syms AS (
+        SELECT DISTINCT h.symbol
+        FROM public.holdings h
+        JOIN public.portfolios p ON p.id = h.portfolio_id
+        WHERE p.user_id IN (SELECT user_id FROM members)
       )
-      select symbol from syms
-    """), {"cid": str(club_id)}).fetchall()
-    current_syms = [r[0] for r in current]
-    if not current_syms:
+      SELECT symbol FROM syms
+    """)
+    current = [r[0] for r in db.execute(cur_sql, {"cid": str(club_id)}).all()]
+    if not current:
         return {"recommendations": []}
 
-    # recommend via asset_asset_cooccur_mv: pick pairs touching current, then rank by lift desc
-    recs = db.execute(text("""
-      with mine as (select unnest(:syms::text[]) as s),
-      cand as (
-        select case when a in (select s from mine) then b else a end as candidate,
-               jaccard, lift, coholders
-        from public.asset_asset_cooccur_mv
-        where (a in (select s from mine) or b in (select s from mine))
-          and coholders >= :minc
+    # Recommend via co-occurrence; use ANY(:syms) with typed ARRAY(TEXT)
+    rec_sql = text("""
+      WITH cand AS (
+        SELECT
+          CASE WHEN a = ANY(:syms) THEN b ELSE a END AS candidate,
+          jaccard, lift, coholders
+        FROM public.asset_asset_cooccur_mv
+        WHERE (a = ANY(:syms) OR b = ANY(:syms))
+          AND coholders >= :minc
       ),
-      uniq as (
-        select candidate, max(lift) as lift, max(jaccard) as jaccard, max(coholders) as coholders
-        from cand
-        where candidate <> all(:syms::text[])
-        group by candidate
+      uniq AS (
+        SELECT candidate,
+               MAX(lift) AS lift,
+               MAX(jaccard) AS jaccard,
+               MAX(coholders) AS coholders
+        FROM cand
+        WHERE NOT (candidate = ANY(:syms))
+        GROUP BY candidate
       )
-      select u.candidate as symbol, a.name, a.sector, u.lift, u.jaccard, u.coholders
-      from uniq u join public.assets a on a.symbol = u.candidate
-      order by u.lift desc nulls last, u.jaccard desc nulls last
-      limit :k
-    """), {"syms": current_syms, "minc": min_coholders, "k": topk_add}).mappings().all()
-
+      SELECT u.candidate AS symbol, a.name, a.sector, u.lift, u.jaccard, u.coholders
+      FROM uniq u JOIN public.assets a ON a.symbol = u.candidate
+      ORDER BY u.lift DESC NULLS LAST, u.jaccard DESC NULLS LAST
+      LIMIT :k
+    """).bindparams(
+        bindparam("syms", type_=ARRAY(String())),
+    )
+    recs = db.execute(rec_sql, {"syms": current, "minc": min_coholders, "k": topk_add}).mappings().all()
     return {"recommendations": recs}
