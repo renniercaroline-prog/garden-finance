@@ -18,14 +18,32 @@ import QuestsPanel from "./ui/quests-panel"
 import AchievementsPanel from "./ui/achievements-panel"
 import LearningCenter from "./ui/learning-center"
 import FlowerPopup from "./ui/flower-popup"
+import InvestmentDetailPopup from "./ui/investment-detail-popup"
 import { PortfolioProvider } from "@/context/portfolio-context"
 import { SocialProvider } from "@/context/social-context"
 import { GamificationProvider } from "@/context/gamification-context"
 
 type FlowerType = "startups" | "causes" | "currencies" | null
 
+interface Investment {
+  id: number
+  name: string
+  type: "startup" | "cause" | "currency"
+}
+
 export default function GardenExperience() {
   const [activeFlower, setActiveFlower] = useState<FlowerType>(null)
+  const [investments, setInvestments] = useState<Investment[]>([])
+  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null)
+
+  const handleInvest = (id: number, name: string, type: "startup" | "cause" | "currency") => {
+    setInvestments((prev) => [...prev, { id, name, type }])
+    setActiveFlower(null) // Close popup after investing
+  }
+
+  const handleRemoveInvestment = (id: number) => {
+    setInvestments((prev) => prev.filter((inv) => inv.id !== id))
+  }
 
   return (
     <PortfolioProvider>
@@ -51,7 +69,9 @@ export default function GardenExperience() {
                 <Suspense fallback={null}>
                   <GardenScene
                     onFlowerClick={setActiveFlower}
-                    controlsEnabled={!activeFlower}
+                    controlsEnabled={!activeFlower && !selectedInvestment}
+                    investments={investments}
+                    onInvestmentClick={setSelectedInvestment}
                   />
                 </Suspense>
               </Canvas>
@@ -77,7 +97,20 @@ export default function GardenExperience() {
 
             {/* Flower Popup */}
             {activeFlower && (
-              <FlowerPopup flowerType={activeFlower} onClose={() => setActiveFlower(null)} />
+              <FlowerPopup
+                flowerType={activeFlower}
+                onClose={() => setActiveFlower(null)}
+                onInvest={handleInvest}
+              />
+            )}
+
+            {/* Investment Detail Popup */}
+            {selectedInvestment && (
+              <InvestmentDetailPopup
+                investment={selectedInvestment}
+                onClose={() => setSelectedInvestment(null)}
+                onRemove={handleRemoveInvestment}
+              />
             )}
 
             {/* Loading Screen */}

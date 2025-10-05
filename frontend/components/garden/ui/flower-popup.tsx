@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 interface FlowerPopupProps {
   flowerType: "startups" | "causes" | "currencies"
   onClose: () => void
+  onInvest: (id: number, name: string, type: "startup" | "cause" | "currency") => void
 }
 
 const flowerConfig = {
@@ -144,12 +145,12 @@ const mockStartups = [
   },
 ]
 
-export default function FlowerPopup({ flowerType, onClose }: FlowerPopupProps) {
+export default function FlowerPopup({ flowerType, onClose, onInvest }: FlowerPopupProps) {
   const config = flowerConfig[flowerType]
 
-  const handleInvest = (startupId: number, name: string) => {
-    console.log(`Investing in startup ${startupId} - ${name}`)
-    // TODO: Implement investment logic
+  const handleInvest = (startup: { id: number; name: string; startup: string }) => {
+    console.log(`Investing in startup ${startup.id} - ${startup.startup}`)
+    onInvest(startup.id, startup.startup, "startup")
   }
 
   return (
@@ -212,7 +213,7 @@ export default function FlowerPopup({ flowerType, onClose }: FlowerPopupProps) {
                           </div>
                         </div>
                         <Button
-                          onClick={() => handleInvest(startup.id, startup.name)}
+                          onClick={() => handleInvest(startup)}
                           className="text-white hover:opacity-90 shrink-0 text-sm h-8 px-3"
                           style={{ backgroundColor: config.color }}
                         >

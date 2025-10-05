@@ -121,12 +121,20 @@ function WaterFountain({ portfolioValue }: { portfolioValue: number }) {
   )
 }
 
+interface Investment {
+  id: number
+  name: string
+  type: "startup" | "cause" | "currency"
+}
+
 interface GardenSceneProps {
   onFlowerClick?: (flowerType: "startups" | "causes" | "currencies") => void
   controlsEnabled?: boolean
+  investments?: Investment[]
+  onInvestmentClick?: (investment: Investment) => void
 }
 
-export default function GardenScene({ onFlowerClick, controlsEnabled = true }: GardenSceneProps = {}) {
+export default function GardenScene({ onFlowerClick, controlsEnabled = true, investments = [], onInvestmentClick }: GardenSceneProps = {}) {
   const { portfolio } = usePortfolio()
 
   console.log("🌿 Garden Scene Rendering...")
@@ -227,6 +235,71 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true }: G
         </Text>
       </group>
 
+      {/* Small sunflowers for invested startups */}
+      {investments
+        .filter((inv) => inv.type === "startup")
+        .map((investment, index) => {
+          // Radial positioning around the main sunflower
+          const angle = (index / Math.max(investments.filter((inv) => inv.type === "startup").length, 1)) * Math.PI * 2
+          const radius = 2.5
+          const x = 5 + Math.cos(angle) * radius
+          const z = 0 + Math.sin(angle) * radius
+
+          return (
+            <group
+              key={investment.id}
+              position={[x, 0, z]}
+              onClick={(e) => {
+                e.stopPropagation()
+                onInvestmentClick?.(investment)
+              }}
+              onPointerOver={(e) => {
+                e.stopPropagation()
+                document.body.style.cursor = "pointer"
+              }}
+              onPointerOut={(e) => {
+                e.stopPropagation()
+                document.body.style.cursor = "default"
+              }}
+            >
+              {/* Stem */}
+              <mesh position={[0, 0.5, 0]} castShadow>
+                <cylinderGeometry args={[0.05, 0.08, 1, 16]} />
+                <meshStandardMaterial color="#5a7c3e" />
+              </mesh>
+
+              {/* Flower center */}
+              <mesh position={[0, 1.1, 0]} castShadow>
+                <sphereGeometry args={[0.2, 32, 32]} />
+                <meshStandardMaterial color="#8b5a2b" />
+              </mesh>
+
+              {/* Petals */}
+              {Array.from({ length: 8 }).map((_, i) => {
+                const petalAngle = (i / 8) * Math.PI * 2
+                const px = Math.cos(petalAngle) * 0.3
+                const pz = Math.sin(petalAngle) * 0.3
+                return (
+                  <mesh
+                    key={i}
+                    position={[px, 1.1, pz]}
+                    rotation={[0, petalAngle, 0]}
+                    castShadow
+                  >
+                    <boxGeometry args={[0.15, 0.03, 0.3]} />
+                    <meshStandardMaterial color="#F5C542" />
+                  </mesh>
+                )
+              })}
+
+              {/* Label with startup name */}
+              <Text position={[0, 1.5, 0]} fontSize={0.12} color="white" anchorX="center">
+                {investment.name}
+              </Text>
+            </group>
+          )
+        })}
+
       {/* Red Rose - to the left of fountain */}
       <group
         position={[-5, 0, 0]}
@@ -283,7 +356,7 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true }: G
 
         {/* Label */}
         <Text position={[0, 3, 0]} fontSize={0.3} color="white" anchorX="center">
-          Causes
+          Donations
         </Text>
       </group>
 
