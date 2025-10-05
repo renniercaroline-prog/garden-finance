@@ -1,20 +1,15 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { usePortfolio } from "@/context/portfolio-context"
+import { useStocks } from "@/context/stocks-context"
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
 
 export default function MarketTicker() {
-  const { portfolio } = usePortfolio()
+  const { quotes } = useStocks()
 
-  // Get top movers
-  const topMovers = [...portfolio.holdings]
-    .filter((h) => h.type === "stock" || h.type === "crypto" || h.type === "reit")
-    .sort((a, b) => {
-      const aChange = "changePercent" in a ? Math.abs(a.changePercent) : 0
-      const bChange = "changePercent" in b ? Math.abs(b.changePercent) : 0
-      return bChange - aChange
-    })
+  // Get top movers from live quotes
+  const topMovers = [...quotes]
+    .sort((a, b) => Math.abs((b.regularMarketChangePercent || 0)) - Math.abs((a.regularMarketChangePercent || 0)))
     .slice(0, 5)
 
   return (
@@ -22,19 +17,12 @@ export default function MarketTicker() {
       <Card className="glass-panel p-3 border-primary/20">
         <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
           <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">TOP MOVERS</span>
-          {topMovers.map((holding) => {
-            const changePercent = "changePercent" in holding ? holding.changePercent : 0
-            const name =
-              holding.type === "stock"
-                ? holding.ticker
-                : holding.type === "crypto"
-                  ? holding.symbol
-                  : holding.type === "reit"
-                    ? holding.ticker
-                    : ""
+          {topMovers.map((q) => {
+            const changePercent = q.regularMarketChangePercent || 0
+            const name = q.symbol
 
             return (
-              <div key={holding.id} className="flex items-center gap-2 whitespace-nowrap">
+              <div key={name} className="flex items-center gap-2 whitespace-nowrap">
                 <span className="text-sm font-semibold text-foreground">{name}</span>
                 <div className="flex items-center gap-1">
                   {changePercent > 0 ? (
