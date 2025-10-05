@@ -5,7 +5,11 @@ import { useThree, useFrame } from "@react-three/fiber"
 import { PointerLockControls } from "@react-three/drei"
 import { Vector3 } from "three"
 
-export default function FirstPersonControls() {
+interface FirstPersonControlsProps {
+  enabled?: boolean
+}
+
+export default function FirstPersonControls({ enabled = true }: FirstPersonControlsProps) {
   const { camera } = useThree()
   const controlsRef = useRef<any>(null)
 
@@ -80,8 +84,21 @@ export default function FirstPersonControls() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!enabled) {
+      // Force unlock pointer
+      if (controlsRef.current?.isLocked) {
+        controlsRef.current.unlock()
+      }
+      // Also try to exit pointer lock through the browser API
+      if (document.pointerLockElement) {
+        document.exitPointerLock()
+      }
+    }
+  }, [enabled])
+
   useFrame((state, delta) => {
-    if (!controlsRef.current?.isLocked) return
+    if (!enabled || !controlsRef.current?.isLocked) return
 
     const speed = moveSpeed * (movement.current.sprint ? sprintMultiplier : 1) * delta
     const direction = new Vector3()
@@ -109,5 +126,5 @@ export default function FirstPersonControls() {
     camera.position.y = 1.6
   })
 
-  return <PointerLockControls ref={controlsRef} />
+  return <PointerLockControls ref={controlsRef} enabled={enabled} />
 }
