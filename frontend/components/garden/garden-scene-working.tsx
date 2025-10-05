@@ -129,12 +129,7 @@ function WaterFountain({ portfolioValue }: { portfolioValue: number }) {
       {/* Water particles */}
       <points ref={waterParticlesRef}>
         <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={particleCount}
-            array={particles.positions}
-            itemSize={3}
-          />
+          <bufferAttribute attach="attributes-position" args={[particles.positions, 3]} />
         </bufferGeometry>
         <pointsMaterial
           size={0.1}
@@ -163,6 +158,7 @@ interface Investment {
   id: number
   name: string
   type: "startup" | "cause" | "currency"
+  amount: number
 }
 
 interface GardenSceneProps {

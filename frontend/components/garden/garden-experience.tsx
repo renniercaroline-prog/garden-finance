@@ -21,6 +21,7 @@ import FlowerPopup from "./ui/flower-popup"
 import InvestmentDetailPopup from "./ui/investment-detail-popup"
 import { PortfolioProvider, usePortfolio } from "@/context/portfolio-context"
 import { SocialProvider } from "@/context/social-context"
+import { StocksProvider } from "@/context/stocks-context"
 import { GamificationProvider } from "@/context/gamification-context"
 
 type FlowerType = "startups" | "causes" | "currencies" | null
@@ -77,7 +78,7 @@ function GardenExperienceContent() {
               onFlowerClick={setActiveFlower}
               controlsEnabled={!activeFlower && !selectedInvestment && !isAmountDialogOpen}
               investments={investments}
-              onInvestmentClick={setSelectedInvestment}
+              onInvestmentClick={(inv) => setSelectedInvestment(inv as any)}
             />
           </Suspense>
         </Canvas>
@@ -131,7 +132,9 @@ export default function GardenExperience() {
     <PortfolioProvider>
       <SocialProvider>
         <GamificationProvider>
-          <GardenExperienceContent />
+          <StocksProvider>
+            <GardenExperienceContent />
+          </StocksProvider>
         </GamificationProvider>
       </SocialProvider>
     </PortfolioProvider>

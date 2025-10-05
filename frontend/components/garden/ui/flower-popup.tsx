@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
+import { useStocks } from "@/context/stocks-context"
 
 interface FlowerPopupProps {
   flowerType: "startups" | "causes" | "currencies"
@@ -36,108 +37,36 @@ const flowerConfig = {
   },
 }
 
-const mockCurrencies = [
-  {
-    id: 201,
-    name: "Bitcoin",
-    symbol: "BTC",
-    description: "The first and most widely recognized cryptocurrency. Digital gold with a fixed supply of 21 million coins. Decentralized, secure, and accepted by thousands of merchants worldwide.",
-    currentPrice: "$52,350",
-    change24h: "+3.2%",
-    marketCap: "$1.2T",
-    isPositive: true,
-  },
-  {
-    id: 202,
-    name: "Ethereum",
-    symbol: "ETH",
-    description: "Leading smart contract platform powering DeFi, NFTs, and Web3 applications. Transition to proof-of-stake reduced energy consumption by 99.95%. Second largest cryptocurrency by market cap.",
-    currentPrice: "$3,180",
-    change24h: "+2.8%",
-    marketCap: "$380B",
-    isPositive: true,
-  },
-  {
-    id: 203,
-    name: "Cardano",
-    symbol: "ADA",
-    description: "Proof-of-stake blockchain platform focused on sustainability and scalability. Research-driven development with peer-reviewed protocols. Strong community and growing DeFi ecosystem.",
-    currentPrice: "$0.52",
-    change24h: "-1.4%",
-    marketCap: "$18B",
-    isPositive: false,
-  },
-  {
-    id: 204,
-    name: "Solana",
-    symbol: "SOL",
-    description: "High-performance blockchain supporting up to 65,000 transactions per second. Low fees and fast confirmation times make it ideal for DeFi and NFT applications.",
-    currentPrice: "$98.50",
-    change24h: "+5.6%",
-    marketCap: "$42B",
-    isPositive: true,
-  },
-  {
-    id: 205,
-    name: "Polkadot",
-    symbol: "DOT",
-    description: "Multi-chain protocol enabling different blockchains to transfer messages and value. Interoperability-focused with shared security model. Founded by Ethereum co-founder Gavin Wood.",
-    currentPrice: "$7.85",
-    change24h: "+1.9%",
-    marketCap: "$10B",
-    isPositive: true,
-  },
-  {
-    id: 206,
-    name: "Chainlink",
-    symbol: "LINK",
-    description: "Decentralized oracle network connecting smart contracts to real-world data. Essential infrastructure for DeFi with partnerships across 900+ projects. Industry-leading oracle solution.",
-    currentPrice: "$15.20",
-    change24h: "-0.8%",
-    marketCap: "$8.5B",
-    isPositive: false,
-  },
-  {
-    id: 207,
-    name: "Polygon",
-    symbol: "MATIC",
-    description: "Ethereum scaling solution providing faster and cheaper transactions. Layer 2 network hosting major DeFi protocols and NFT marketplaces. Used by Disney, Instagram, and Reddit.",
-    currentPrice: "$0.88",
-    change24h: "+4.3%",
-    marketCap: "$8.2B",
-    isPositive: true,
-  },
-  {
-    id: 208,
-    name: "Avalanche",
-    symbol: "AVAX",
-    description: "Fast smart contract platform with sub-second finality. Eco-friendly proof-of-stake consensus. Growing ecosystem of DeFi apps and institutional partnerships.",
-    currentPrice: "$38.60",
-    change24h: "+2.1%",
-    marketCap: "$14B",
-    isPositive: true,
-  },
-  {
-    id: 209,
-    name: "Cosmos",
-    symbol: "ATOM",
-    description: "Internet of Blockchains connecting independent chains through IBC protocol. Enables sovereignty and interoperability. Powering 250+ apps and services across the ecosystem.",
-    currentPrice: "$11.40",
-    change24h: "-2.3%",
-    marketCap: "$4.5B",
-    isPositive: false,
-  },
-  {
-    id: 210,
-    name: "Algorand",
-    symbol: "ALGO",
-    description: "Pure proof-of-stake blockchain with carbon-negative footprint. Instant finality and low transaction costs. Used by central banks for digital currency experiments.",
-    currentPrice: "$0.32",
-    change24h: "+1.5%",
-    marketCap: "$2.8B",
-    isPositive: true,
-  },
-]
+type TrendingItem = {
+  symbol: string
+  shortName?: string
+}
+
+type QuoteItem = {
+  symbol: string
+  shortName?: string
+  regularMarketPrice?: number
+  regularMarketChangePercent?: number
+  marketCap?: number
+}
+
+function formatCurrencyUSD(n?: number) {
+  if (n == null || Number.isNaN(n)) return "—"
+  return n.toLocaleString(undefined, { style: "currency", currency: "USD" })
+}
+
+function formatPercent(n?: number) {
+  if (n == null || Number.isNaN(n)) return "—"
+  return `${n.toFixed(2)}%`
+}
+
+function formatMarketCap(n?: number) {
+  if (n == null || Number.isNaN(n)) return "—"
+  if (n >= 1e12) return `$${(n / 1e12).toFixed(1)}T`
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`
+  return `$${n.toLocaleString()}`
+}
 
 const mockDonations = [
   {
@@ -367,6 +296,7 @@ const mockStartups = [
 
 export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDialogChange }: FlowerPopupProps) {
   const config = flowerConfig[flowerType]
+  const { quotes: trending, loading, error, refresh } = useStocks()
   const [selectedItem, setSelectedItem] = useState<{
     id: number
     name: string
@@ -425,6 +355,13 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
       return () => clearTimeout(timeout)
     }
   }, [selectedItem])
+
+  // Optional: refresh prefetch when user enters the tab
+  useEffect(() => {
+    if (flowerType === "currencies" && trending.length === 0 && !loading) {
+      refresh()
+    }
+  }, [flowerType])
 
   return (
     <>
@@ -613,47 +550,57 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
           ) : flowerType === "currencies" ? (
             <ScrollArea className="h-[500px] p-6">
               <div className="space-y-4">
-                {mockCurrencies.map((currency) => (
-                  <Card key={currency.id} className="overflow-hidden border-2 hover:shadow-xl transition-all duration-200 hover:border-opacity-60" style={{ borderColor: config.color + '20' }}>
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-lg text-gray-800">{currency.name}</h3>
-                            <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ backgroundColor: config.color + '20', color: config.color }}>
-                              {currency.symbol}
-                            </span>
-                          </div>
-                          <h4 className="font-semibold text-xl mb-2" style={{ color: config.color }}>
-                            {currency.currentPrice}
-                          </h4>
-                          <p className="text-sm text-gray-600 mb-3 leading-relaxed">{currency.description}</p>
-                          <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-500 font-medium">24h:</span>
-                              <span className={`font-bold ${currency.isPositive ? "text-green-600" : "text-red-600"}`}>
-                                {currency.change24h}
-                              </span>
+                {loading ? (
+                  <div className="text-center text-sm text-muted-foreground py-8">Loading trending…</div>
+                ) : error ? (
+                  <div className="text-center text-sm text-destructive py-8">{error}</div>
+                ) : trending.length === 0 ? (
+                  <div className="text-center text-sm text-muted-foreground py-8">No trending symbols</div>
+                ) : (
+                  trending.map((q) => {
+                    const isPositive = (q.regularMarketChangePercent || 0) >= 0
+                    return (
+                      <Card key={q.symbol} className="overflow-hidden border-2 hover:shadow-xl transition-all duration-200 hover:border-opacity-60" style={{ borderColor: config.color + '20' }}>
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-lg text-gray-800">{q.shortName || q.symbol}</h3>
+                                <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ backgroundColor: config.color + '20', color: config.color }}>
+                                  {q.symbol}
+                                </span>
+                              </div>
+                              <h4 className="font-semibold text-xl mb-2" style={{ color: config.color }}>
+                                {formatCurrencyUSD(q.regularMarketPrice)}
+                              </h4>
+                              <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-500 font-medium">24h:</span>
+                                  <span className={`font-bold ${isPositive ? "text-green-600" : "text-red-600"}`}>
+                                    {formatPercent(q.regularMarketChangePercent)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-500 font-medium">Market Cap:</span>
+                                  <span className="font-semibold text-gray-700">
+                                    {formatMarketCap(q.marketCap)}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-500 font-medium">Market Cap:</span>
-                              <span className="font-semibold text-gray-700">
-                                {currency.marketCap}
-                              </span>
-                            </div>
+                            <Button
+                              onClick={() => handleBuyCurrency({ id: Date.now(), name: q.shortName || q.symbol, symbol: q.symbol })}
+                              className="text-white font-semibold shrink-0 h-10 px-6 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+                              style={{ backgroundColor: config.color }}
+                            >
+                              Buy
+                            </Button>
                           </div>
-                        </div>
-                        <Button
-                          onClick={() => handleBuyCurrency(currency)}
-                          className="text-white font-semibold shrink-0 h-10 px-6 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
-                          style={{ backgroundColor: config.color }}
-                        >
-                          Buy
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        </CardContent>
+                      </Card>
+                    )
+                  })
+                )}
               </div>
             </ScrollArea>
           ) : (
