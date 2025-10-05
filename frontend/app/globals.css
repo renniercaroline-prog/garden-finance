@@ -1,0 +1,182 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+@theme inline {
+  /* Nature-inspired color palette for Garden Finance */
+
+  /* Primary - Deep Forest Green */
+  --color-primary: #2d5016;
+  --color-primary-foreground: #f5f1e8;
+
+  /* Secondary - Warm Terracotta */
+  --color-secondary: #d4756e;
+  --color-secondary-foreground: #f5f1e8;
+
+  /* Accent - Golden Sunlight */
+  --color-accent: #f4c430;
+  --color-accent-foreground: #2d5016;
+
+  /* Neutrals - Natural Earth Tones */
+  --color-background: #f5f1e8;
+  --color-foreground: #2d3319;
+  --color-card: #ffffff;
+  --color-card-foreground: #2d3319;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #2d3319;
+
+  /* Muted - Soft Sage */
+  --color-muted: #e8ebe4;
+  --color-muted-foreground: #5a6650;
+
+  /* Border */
+  --color-border: #d4d9cc;
+  --color-input: #d4d9cc;
+  --color-ring: #2d5016;
+
+  /* Semantic colors */
+  --color-destructive: #c44536;
+  --color-destructive-foreground: #f5f1e8;
+
+  /* Success - Growth Green */
+  --color-success: #4a7c3c;
+  --color-success-foreground: #f5f1e8;
+
+  /* Warning - Autumn Orange */
+  --color-warning: #e8944a;
+  --color-warning-foreground: #2d3319;
+
+  /* Chart colors - Garden themed */
+  --color-chart-1: #4a7c3c;
+  --color-chart-2: #f4c430;
+  --color-chart-3: #d4756e;
+  --color-chart-4: #6b9080;
+  --color-chart-5: #a8b5a0;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-crimson);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    overflow: hidden;
+  }
+}
+
+/* Custom garden-themed styles */
+.garden-gradient {
+  background: linear-gradient(135deg, #f5f1e8 0%, #e8ebe4 100%);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 217, 204, 0.3);
+}
+
+/* 3D Canvas container */
+.canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+}
+
+/* UI Overlay */
+.ui-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ui-overlay > * {
+  pointer-events: auto;
+}
+
+/* Crosshair for interaction */
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: rgba(45, 80, 22, 0.6);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.crosshair::before,
+.crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(45, 80, 22, 0.6);
+}
+
+.crosshair::before {
+  width: 12px;
+  height: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.crosshair::after {
+  width: 1px;
+  height: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
