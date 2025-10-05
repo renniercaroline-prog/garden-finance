@@ -1,6 +1,7 @@
 from sqlalchemy import (
     Column, String, Boolean, DateTime, ForeignKey, Text, Numeric, Date,
-    UniqueConstraint, CheckConstraint, BigInteger
+    UniqueConstraint, CheckConstraint, BigInteger,
+    Integer
 )
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -155,3 +156,45 @@ user_user_similarity_mv = Table("user_user_similarity_mv", mv_metadata,
     Column("b_sz", BigInteger),
     Column("jaccard", Numeric),
 )
+
+# ---- Role models / inspiration portfolio ----
+class RoleModel(Base):
+    __tablename__ = "role_models"
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), primary_key=True)
+    spotlight_portfolio_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="SET NULL"))
+    bio: Mapped[str | None] = mapped_column(Text)
+    expertise: Mapped[str | None] = mapped_column(String)  # e.g., "Clean tech, EU quality"
+    author: Mapped[Profile] = relationship("Profile")
+    spotlight_portfolio: Mapped["Portfolio"] = relationship("Portfolio")
+
+# ---- Club goals (supports multiple themed goals per club) ----
+class ClubGoal(Base):
+    __tablename__ = "club_goals"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    club_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("clubs.id", ondelete="CASCADE"), nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)  # e.g., "Green retirement"
+    description: Mapped[str | None] = mapped_column(Text)
+    target_amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)  # store in cents
+    start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+# ---- Member contributions toward goals ----
+class Contribution(Base):
+    __tablename__ = "contributions"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    club_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("clubs.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    goal_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("club_goals.id", ondelete="SET NULL"))
+    amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)  # ≥ 0
+    note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+# ---- Club chat/messages ----
+class ClubMessage(Base):
+    __tablename__ = "club_messages"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    club_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("clubs.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)

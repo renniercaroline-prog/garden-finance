@@ -127,3 +127,70 @@ class SimilarUserOut(BaseModel):
     intersect_sz: Optional[int] = None
     a_sz: Optional[int] = None
     b_sz: Optional[int] = None
+
+# ---- RoleModel / Inspiration ----
+class RoleModelCreate(BaseModel):
+    user_id: UUID
+    spotlight_portfolio_id: UUID | None = None
+    bio: str | None = None
+    expertise: str | None = None
+
+class RoleModelOut(BaseModel):
+    user_id: UUID
+    spotlight_portfolio_id: UUID | None
+    bio: str | None
+    expertise: str | None
+    class Config: from_attributes = True
+
+# ---- Club goals / contributions / chat ----
+class ClubGoalCreate(BaseModel):
+    name: str
+    description: str | None = None
+    target_amount_cents: int
+    start_date: datetime | None = None
+    deadline: datetime | None = None
+
+class ClubGoalOut(BaseModel):
+    id: UUID
+    club_id: UUID
+    name: str
+    description: str | None
+    target_amount_cents: int
+    start_date: datetime | None
+    deadline: datetime | None
+    created_at: datetime
+    class Config: from_attributes = True
+
+class ContributionCreate(BaseModel):
+    user_id: UUID
+    amount_cents: int
+    note: str | None = None
+    goal_id: UUID | None = None
+
+class ContributionOut(BaseModel):
+    id: UUID
+    club_id: UUID
+    user_id: UUID
+    goal_id: UUID | None
+    amount_cents: int
+    note: str | None
+    created_at: datetime
+    class Config: from_attributes = True
+
+class ClubMessageCreate(BaseModel):
+    user_id: UUID
+    message: str
+
+class ClubMessageOut(BaseModel):
+    id: UUID
+    club_id: UUID
+    user_id: UUID
+    message: str
+    created_at: datetime
+    class Config: from_attributes = True
+
+# ---- Inspiration feed (post + author + portfolio snapshot) ----
+class FeedItem(BaseModel):
+    post: PostOut
+    author: ProfileOut
+    inspiration_portfolio: PortfolioOut | None = None
