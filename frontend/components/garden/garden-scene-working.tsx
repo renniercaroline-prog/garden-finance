@@ -65,6 +65,131 @@ export default function GardenScene() {
 
       {/* Portfolio Holdings removed - clean garden for new design */}
 
+      {/* Sunflower - to the right of fountain */}
+      <group position={[5, 0, 0]}>
+        {/* Stem */}
+        <mesh position={[0, 1, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.15, 2, 16]} />
+          <meshStandardMaterial color="#5a7c3e" />
+        </mesh>
+
+        {/* Flower center */}
+        <mesh position={[0, 2.2, 0]} castShadow>
+          <sphereGeometry args={[0.4, 32, 32]} />
+          <meshStandardMaterial color="#8b5a2b" />
+        </mesh>
+
+        {/* Petals - arranged in a circle */}
+        {Array.from({ length: 12 }).map((_, i) => {
+          const angle = (i / 12) * Math.PI * 2
+          const x = Math.cos(angle) * 0.6
+          const z = Math.sin(angle) * 0.6
+          return (
+            <mesh
+              key={i}
+              position={[x, 2.2, z]}
+              rotation={[0, angle, 0]}
+              castShadow
+            >
+              <boxGeometry args={[0.3, 0.05, 0.6]} />
+              <meshStandardMaterial color="#F5C542" />
+            </mesh>
+          )
+        })}
+      </group>
+
+      {/* Red Rose - to the left of fountain */}
+      <group position={[-5, 0, 0]}>
+        {/* Stem */}
+        <mesh position={[0, 1, 0]} castShadow>
+          <cylinderGeometry args={[0.08, 0.12, 2, 16]} />
+          <meshStandardMaterial color="#2d5016" />
+        </mesh>
+
+        {/* Rose petals - layered spheres for rose shape */}
+        <mesh position={[0, 2.2, 0]} castShadow>
+          <sphereGeometry args={[0.3, 32, 32]} />
+          <meshStandardMaterial color="#dc143c" />
+        </mesh>
+        <mesh position={[0, 2.3, 0]} castShadow>
+          <sphereGeometry args={[0.25, 32, 32]} />
+          <meshStandardMaterial color="#c41e3a" />
+        </mesh>
+        <mesh position={[0, 2.35, 0]} castShadow>
+          <sphereGeometry args={[0.15, 32, 32]} />
+          <meshStandardMaterial color="#b22234" />
+        </mesh>
+
+        {/* Outer petals */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const angle = (i / 8) * Math.PI * 2
+          const x = Math.cos(angle) * 0.35
+          const z = Math.sin(angle) * 0.35
+          return (
+            <mesh
+              key={i}
+              position={[x, 2.1, z]}
+              rotation={[0, angle, Math.PI / 6]}
+              castShadow
+            >
+              <sphereGeometry args={[0.2, 16, 16]} />
+              <meshStandardMaterial color="#ff0040" />
+            </mesh>
+          )
+        })}
+      </group>
+
+      {/* Purple Lily - to the back of fountain */}
+      <group position={[0, 0, -5]}>
+        {/* Stem */}
+        <mesh position={[0, 1, 0]} castShadow>
+          <cylinderGeometry args={[0.08, 0.1, 2, 16]} />
+          <meshStandardMaterial color="#4a7c3e" />
+        </mesh>
+
+        {/* Lily center - yellow stamen */}
+        <mesh position={[0, 2.2, 0]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 0.4, 8]} />
+          <meshStandardMaterial color="#ffd700" />
+        </mesh>
+
+        {/* Lily petals - 6 elongated petals */}
+        {Array.from({ length: 6 }).map((_, i) => {
+          const angle = (i / 6) * Math.PI * 2
+          const x = Math.cos(angle) * 0.4
+          const z = Math.sin(angle) * 0.4
+          return (
+            <mesh
+              key={i}
+              position={[x, 2.1, z]}
+              rotation={[Math.PI / 3, angle, 0]}
+              castShadow
+            >
+              <boxGeometry args={[0.25, 0.05, 0.8]} />
+              <meshStandardMaterial color="#9b59b6" />
+            </mesh>
+          )
+        })}
+
+        {/* Inner petals for more depth */}
+        {Array.from({ length: 6 }).map((_, i) => {
+          const angle = (i / 6) * Math.PI * 2 + Math.PI / 6
+          const x = Math.cos(angle) * 0.25
+          const z = Math.sin(angle) * 0.25
+          return (
+            <mesh
+              key={`inner-${i}`}
+              position={[x, 2.15, z]}
+              rotation={[Math.PI / 4, angle, 0]}
+              castShadow
+            >
+              <boxGeometry args={[0.2, 0.05, 0.6]} />
+              <meshStandardMaterial color="#8e44ad" />
+            </mesh>
+          )
+        })}
+      </group>
+
       {/* Sky */}
       <Sky 
         distance={450000} 
