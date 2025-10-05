@@ -1,0 +1,50 @@
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: adahack2025-backend
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn app.main:app --config gunicorn.conf.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: USE_SQLITE
+        value: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: adahack2025-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_USER
+        fromDatabase:
+          name: adahack2025-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: adahack2025-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: adahack2025-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: adahack2025-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: adahack2025-db
+          property: database
+    healthCheckPath: /
+    autoDeploy: true
+
+databases:
+  # PostgreSQL Database
+  - name: adahack2025-db
+    databaseName: adahack2025
+    user: adahack2025_user
+    plan: free
+
