@@ -29,8 +29,8 @@ const flowerConfig = {
     emoji: "🌹",
   },
   currencies: {
-    title: "Currencies",
-    description: "Trade and invest in digital currencies",
+    title: "Stocks",
+    description: "Invest in cryptocurrency stocks and digital assets",
     color: "#9b59b6",
     emoji: "💜",
   },
@@ -430,44 +430,53 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
     <>
       {/* Amount Input Dialog */}
       {selectedItem && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>
-                {selectedItem.type === "startup" ? "Invest in" : "Donate to"} {selectedItem.name}
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md">
+          <Card className="w-full max-w-md border-none shadow-2xl bg-gradient-to-br from-white to-gray-50">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                {selectedItem.type === "startup" ? "Investment Amount" : selectedItem.type === "cause" ? "Donation Amount" : "Purchase Amount"}
               </CardTitle>
-              <CardDescription>How much would you like to {selectedItem.type === "startup" ? "invest" : "donate"}?</CardDescription>
+              <CardDescription className="text-base">
+                {selectedItem.type === "startup" ? "Invest in" : selectedItem.type === "cause" ? "Support" : "Buy"} <span className="font-semibold" style={{ color: config.color }}>{selectedItem.name}</span>
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  onFocus={() => {
-                    // Ensure pointer is unlocked when input is focused
-                    if (document.pointerLockElement) {
-                      document.exitPointerLock()
-                    }
-                  }}
-                  autoFocus
-                  min="1"
-                  step="1"
-                />
+                <Label htmlFor="amount" className="text-sm font-semibold text-gray-700">Amount (USD)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    onFocus={() => {
+                      if (document.pointerLockElement) {
+                        document.exitPointerLock()
+                      }
+                    }}
+                    autoFocus
+                    min="1"
+                    step="1"
+                    className="pl-8 h-12 text-lg font-semibold border-2 focus:ring-2 transition-all"
+                    style={{
+                      borderColor: config.color + '40',
+                      '--tw-ring-color': config.color + '60'
+                    } as any}
+                  />
+                </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-2">
                 <Button
                   onClick={handleConfirmInvestment}
-                  className="flex-1 text-white"
+                  className="flex-1 h-11 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                   style={{ backgroundColor: config.color }}
                   disabled={!amount || parseFloat(amount) <= 0}
                 >
-                  Confirm
+                  {selectedItem.type === "startup" ? "Confirm Investment" : selectedItem.type === "cause" ? "Confirm Donation" : "Confirm Purchase"}
                 </Button>
-                <Button variant="outline" className="flex-1" onClick={handleCancelAmount}>
+                <Button variant="outline" className="flex-1 h-11 font-semibold border-2 hover:bg-gray-50" onClick={handleCancelAmount}>
                   Cancel
                 </Button>
               </div>
@@ -477,21 +486,23 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
       )}
 
       {/* Main Popup */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <Card className="w-full max-w-3xl max-h-[80vh] flex flex-col shadow-2xl">
-        <CardHeader className="border-b" style={{ borderBottomColor: config.color }}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+        <Card className="w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl border-none bg-gradient-to-br from-white via-gray-50 to-white">
+        <CardHeader className="border-b-2 pb-6" style={{ borderBottomColor: config.color + '30' }}>
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-4xl">{config.emoji}</span>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: config.color + '20' }}>
+                <span className="text-4xl">{config.emoji}</span>
+              </div>
               <div>
-                <CardTitle className="text-2xl" style={{ color: config.color }}>
+                <CardTitle className="text-3xl font-bold" style={{ color: config.color }}>
                   {config.title}
                 </CardTitle>
-                <CardDescription className="mt-1">{config.description}</CardDescription>
+                <CardDescription className="mt-2 text-base text-gray-600">{config.description}</CardDescription>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose} className="ml-4">
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={onClose} className="ml-4 hover:bg-gray-100 rounded-full">
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </CardHeader>
@@ -499,34 +510,34 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
         <CardContent className="flex-1 overflow-hidden p-0">
           {flowerType === "startups" ? (
             <ScrollArea className="h-[500px] p-6">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {mockStartups.map((startup) => (
-                  <Card key={startup.id} className="overflow-hidden">
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between gap-3">
+                  <Card key={startup.id} className="overflow-hidden border-2 hover:shadow-xl transition-all duration-200 hover:border-opacity-60" style={{ borderColor: config.color + '20' }}>
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <h3 className="font-semibold text-base">{startup.name}</h3>
-                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-lg text-gray-800">{startup.name}</h3>
+                            <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ backgroundColor: config.color + '20', color: config.color }}>
                               {startup.stage}
                             </span>
                           </div>
-                          <h4 className="font-medium text-sm mb-1.5" style={{ color: config.color }}>
+                          <h4 className="font-semibold text-base mb-2" style={{ color: config.color }}>
                             {startup.startup}
                           </h4>
-                          <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{startup.description}</p>
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">
+                          <p className="text-sm text-gray-600 mb-3 leading-relaxed">{startup.description}</p>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500 font-medium">
                                 {startup.raised} raised of {startup.seeking}
                               </span>
-                              <span className="font-medium" style={{ color: config.color }}>
+                              <span className="font-bold text-base" style={{ color: config.color }}>
                                 {Math.round((startup.raisedAmount / startup.goalAmount) * 100)}%
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 shadow-inner">
                               <div
-                                className="h-2 rounded-full transition-all"
+                                className="h-2.5 rounded-full transition-all duration-300 shadow-sm"
                                 style={{
                                   width: `${(startup.raisedAmount / startup.goalAmount) * 100}%`,
                                   backgroundColor: config.color,
@@ -537,7 +548,7 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
                         </div>
                         <Button
                           onClick={() => handleInvest(startup)}
-                          className="text-white hover:opacity-90 shrink-0 text-sm h-8 px-3"
+                          className="text-white font-semibold shrink-0 h-10 px-6 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
                           style={{ backgroundColor: config.color }}
                         >
                           Invest
@@ -550,34 +561,34 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
             </ScrollArea>
           ) : flowerType === "causes" ? (
             <ScrollArea className="h-[500px] p-6">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {mockDonations.map((donation) => (
-                  <Card key={donation.id} className="overflow-hidden">
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between gap-3">
+                  <Card key={donation.id} className="overflow-hidden border-2 hover:shadow-xl transition-all duration-200 hover:border-opacity-60" style={{ borderColor: config.color + '20' }}>
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <h3 className="font-semibold text-base">{donation.name}</h3>
-                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-lg text-gray-800">{donation.name}</h3>
+                            <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ backgroundColor: config.color + '20', color: config.color }}>
                               {donation.category}
                             </span>
                           </div>
-                          <h4 className="font-medium text-sm mb-1.5" style={{ color: config.color }}>
+                          <h4 className="font-semibold text-base mb-2" style={{ color: config.color }}>
                             {donation.organization}
                           </h4>
-                          <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{donation.description}</p>
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">
+                          <p className="text-sm text-gray-600 mb-3 leading-relaxed">{donation.description}</p>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500 font-medium">
                                 {donation.raised} raised of {donation.seeking}
                               </span>
-                              <span className="font-medium" style={{ color: config.color }}>
+                              <span className="font-bold text-base" style={{ color: config.color }}>
                                 {Math.round((donation.raisedAmount / donation.goalAmount) * 100)}%
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 shadow-inner">
                               <div
-                                className="h-2 rounded-full transition-all"
+                                className="h-2.5 rounded-full transition-all duration-300 shadow-sm"
                                 style={{
                                   width: `${(donation.raisedAmount / donation.goalAmount) * 100}%`,
                                   backgroundColor: config.color,
@@ -588,7 +599,7 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
                         </div>
                         <Button
                           onClick={() => handleDonate(donation)}
-                          className="text-white hover:opacity-90 shrink-0 text-sm h-8 px-3"
+                          className="text-white font-semibold shrink-0 h-10 px-6 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
                           style={{ backgroundColor: config.color }}
                         >
                           Donate
@@ -601,34 +612,40 @@ export default function FlowerPopup({ flowerType, onClose, onInvest, onAmountDia
             </ScrollArea>
           ) : flowerType === "currencies" ? (
             <ScrollArea className="h-[500px] p-6">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {mockCurrencies.map((currency) => (
-                  <Card key={currency.id} className="overflow-hidden">
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between gap-3">
+                  <Card key={currency.id} className="overflow-hidden border-2 hover:shadow-xl transition-all duration-200 hover:border-opacity-60" style={{ borderColor: config.color + '20' }}>
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <h3 className="font-semibold text-base">{currency.name}</h3>
-                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-lg text-gray-800">{currency.name}</h3>
+                            <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ backgroundColor: config.color + '20', color: config.color }}>
                               {currency.symbol}
                             </span>
                           </div>
-                          <h4 className="font-medium text-sm mb-1.5" style={{ color: config.color }}>
+                          <h4 className="font-semibold text-xl mb-2" style={{ color: config.color }}>
                             {currency.currentPrice}
                           </h4>
-                          <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{currency.description}</p>
-                          <div className="flex items-center gap-3 text-xs">
-                            <span className={currency.isPositive ? "text-green-600" : "text-red-600"}>
-                              {currency.change24h}
-                            </span>
-                            <span className="text-muted-foreground">
-                              Market Cap: {currency.marketCap}
-                            </span>
+                          <p className="text-sm text-gray-600 mb-3 leading-relaxed">{currency.description}</p>
+                          <div className="flex items-center gap-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500 font-medium">24h:</span>
+                              <span className={`font-bold ${currency.isPositive ? "text-green-600" : "text-red-600"}`}>
+                                {currency.change24h}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500 font-medium">Market Cap:</span>
+                              <span className="font-semibold text-gray-700">
+                                {currency.marketCap}
+                              </span>
+                            </div>
                           </div>
                         </div>
                         <Button
                           onClick={() => handleBuyCurrency(currency)}
-                          className="text-white hover:opacity-90 shrink-0 text-sm h-8 px-3"
+                          className="text-white font-semibold shrink-0 h-10 px-6 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
                           style={{ backgroundColor: config.color }}
                         >
                           Buy

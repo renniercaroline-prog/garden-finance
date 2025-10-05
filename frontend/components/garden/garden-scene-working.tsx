@@ -182,11 +182,23 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
     <>
       {/* Background */}
       <color attach="background" args={["#87CEEB"]} />
-      
-      {/* Strong Lighting */}
-      <ambientLight intensity={2} />
-      <directionalLight position={[50, 50, 25]} intensity={3} castShadow />
-      <pointLight position={[0, 10, 0]} intensity={2} />
+      <fog attach="fog" args={["#b8d4e8", 30, 100]} />
+
+      {/* Realistic Lighting */}
+      <ambientLight intensity={0.4} />
+      <directionalLight
+        position={[50, 50, 25]}
+        intensity={1.2}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={100}
+        shadow-camera-left={-50}
+        shadow-camera-right={50}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
+      />
+      <hemisphereLight args={["#87CEEB", "#6b8e4e", 0.6]} />
 
       {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -834,7 +846,7 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
 
         {/* Label */}
         <Text position={[0, 3, 0]} fontSize={0.3} color="white" anchorX="center">
-          Currencies
+          Stocks
         </Text>
       </group>
 
