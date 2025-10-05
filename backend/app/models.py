@@ -5,7 +5,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, date
 import uuid
 
 from .db import Base
@@ -63,19 +63,16 @@ class Portfolio(Base):
 
 class Holding(Base):
     __tablename__ = "holdings"
-
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     portfolio_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False)
-    symbol: Mapped[str] = mapped_column(String, ForeignKey("assets.symbol", onupdate="CASCADE"), nullable=False)
+    symbol: Mapped[str | None] = mapped_column(String, ForeignKey("assets.symbol", onupdate="CASCADE"))
+    startup_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"))
     pct_weight: Mapped[Numeric] = mapped_column(Numeric, nullable=False)
     since: Mapped[Date | None] = mapped_column(Date)
 
-    __table_args__ = (
-        CheckConstraint("pct_weight >= 0", name="ck_holdings_weight_nonneg"),
-    )
-
-    portfolio: Mapped[Portfolio] = relationship("Portfolio", back_populates="holdings")
-    asset: Mapped[Asset] = relationship("Asset", back_populates="holdings")
+    portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="holdings")
+    asset: Mapped["Asset"] = relationship("Asset", back_populates="holdings", primaryjoin="Holding.symbol==Asset.symbol")
+    startup: Mapped["Startup"] = relationship("Startup")
 
 
 class Club(Base):
@@ -121,6 +118,7 @@ class Post(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     referenced_symbols: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    referenced_startups: Mapped[list[uuid.UUID] | None] = mapped_column(ARRAY(UUID(as_uuid=True)))
 
     author: Mapped[Profile] = relationship("Profile", back_populates="posts")
 
@@ -197,4 +195,87 @@ class ClubMessage(Base):
     club_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("clubs.id", ondelete="CASCADE"), nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+from sqlalchemy import Enum
+
+class Startup(Base):
+    __tablename__ = "startups"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    slug: Mapped[str | None] = mapped_column(String, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    website: Mapped[str | None] = mapped_column(String)
+    sector: Mapped[str | None] = mapped_column(String)
+    country: Mapped[str | None] = mapped_column(String)
+    description: Mapped[str | None] = mapped_column(Text)
+    women_led: Mapped[bool] = mapped_column(Boolean, default=True)
+    stage: Mapped[str | None] = mapped_column(Enum('idea','pre-seed','seed','series-a','series-b','growth', name="startup_stage"))
+    currency: Mapped[str | None] = mapped_column(String, default="USD")
+    min_check_cents: Mapped[int | None] = mapped_column(Integer)
+    valuation_cents: Mapped[int | None] = mapped_column(BigInteger)
+    open_for_investment: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+class StartupRound(Base):
+    __tablename__ = "startup_rounds"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    startup_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"), nullable=False)
+    round_type: Mapped[str] = mapped_column(String, nullable=False)  # mirrors stage values
+    target_cents: Mapped[int | None] = mapped_column(BigInteger)
+    min_check_cents: Mapped[int | None] = mapped_column(Integer)
+    opens_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closes_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+class Cause(Base):
+    __tablename__ = "causes"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    slug: Mapped[str | None] = mapped_column(String, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    category: Mapped[str | None] = mapped_column(String)
+    country: Mapped[str | None] = mapped_column(String)
+    sdg_tags: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    image_url: Mapped[str | None] = mapped_column(String)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    target_amount_cents: Mapped[int | None] = mapped_column(BigInteger)
+    deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+class Donation(Base):
+    __tablename__ = "donations"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    cause_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("causes.id", ondelete="CASCADE"), nullable=False)
+    club_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("clubs.id", ondelete="SET NULL"))
+    amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency: Mapped[str] = mapped_column(String, default="GBP", nullable=False)
+    message: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Enum('pending','succeeded','failed','refunded', name="donation_status"), default='succeeded', nullable=False)
+    provider_session_id: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+class RecurringDonation(Base):
+    __tablename__ = "recurring_donations"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    cause_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("causes.id", ondelete="CASCADE"), nullable=False)
+    amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency: Mapped[str] = mapped_column(String, default="GBP", nullable=False)
+    interval: Mapped[str] = mapped_column(Enum('weekly','monthly','quarterly','yearly', name="donation_interval"), default='monthly', nullable=False)
+    start_date: Mapped[date] = mapped_column(Date, default=date.today, nullable=False)
+    end_date: Mapped[date | None] = mapped_column(Date)
+    next_charge_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+class DonationMatch(Base):
+    __tablename__ = "donation_matches"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cause_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("causes.id", ondelete="CASCADE"), nullable=False)
+    sponsor: Mapped[str] = mapped_column(String, nullable=False)
+    match_ratio: Mapped[float] = mapped_column(Numeric, nullable=False)
+    cap_cents: Mapped[int | None] = mapped_column(BigInteger)
+    opens_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closes_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
