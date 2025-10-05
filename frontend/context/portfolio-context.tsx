@@ -10,6 +10,8 @@ interface PortfolioContextType {
   buyAsset: (holding: Partial<Holding>) => void
   sellAsset: (holdingId: string, amount: number) => void
   updateHoldingPrice: (holdingId: string, newPrice: number, changePercent: number) => void
+  spendMoney: (amount: number) => void
+  refundMoney: (amount: number) => void
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined)
@@ -222,6 +224,42 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     [calculateTotalValue],
   )
 
+  const spendMoney = useCallback((amount: number) => {
+    setPortfolio((prev) => {
+      const newCash = prev.cash - amount
+      const newTotalValue = calculateTotalValue(prev.holdings, newCash)
+      console.log(`💰 Spending $${amount}:`, {
+        oldCash: prev.cash,
+        newCash,
+        oldTotal: prev.totalValue,
+        newTotal: newTotalValue,
+      })
+      return {
+        ...prev,
+        cash: newCash,
+        totalValue: newTotalValue,
+      }
+    })
+  }, [calculateTotalValue])
+
+  const refundMoney = useCallback((amount: number) => {
+    setPortfolio((prev) => {
+      const newCash = prev.cash + amount
+      const newTotalValue = calculateTotalValue(prev.holdings, newCash)
+      console.log(`💵 Refunding $${amount}:`, {
+        oldCash: prev.cash,
+        newCash,
+        oldTotal: prev.totalValue,
+        newTotal: newTotalValue,
+      })
+      return {
+        ...prev,
+        cash: newCash,
+        totalValue: newTotalValue,
+      }
+    })
+  }, [calculateTotalValue])
+
   return (
     <PortfolioContext.Provider
       value={{
@@ -231,6 +269,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         buyAsset,
         sellAsset,
         updateHoldingPrice,
+        spendMoney,
+        refundMoney,
       }}
     >
       {children}

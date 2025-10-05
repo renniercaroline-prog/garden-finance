@@ -300,6 +300,162 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
           )
         })}
 
+      {/* Small roses for donations */}
+      {investments
+        .filter((inv) => inv.type === "cause")
+        .map((investment, index) => {
+          // Radial positioning around the main rose
+          const angle = (index / Math.max(investments.filter((inv) => inv.type === "cause").length, 1)) * Math.PI * 2
+          const radius = 2.5
+          const x = -5 + Math.cos(angle) * radius
+          const z = 0 + Math.sin(angle) * radius
+
+          return (
+            <group
+              key={investment.id}
+              position={[x, 0, z]}
+              onClick={(e) => {
+                e.stopPropagation()
+                onInvestmentClick?.(investment)
+              }}
+              onPointerOver={(e) => {
+                e.stopPropagation()
+                document.body.style.cursor = "pointer"
+              }}
+              onPointerOut={(e) => {
+                e.stopPropagation()
+                document.body.style.cursor = "default"
+              }}
+            >
+              {/* Stem */}
+              <mesh position={[0, 0.5, 0]} castShadow>
+                <cylinderGeometry args={[0.04, 0.06, 1, 16]} />
+                <meshStandardMaterial color="#2d5016" />
+              </mesh>
+
+              {/* Rose center */}
+              <mesh position={[0, 1.1, 0]} castShadow>
+                <sphereGeometry args={[0.15, 32, 32]} />
+                <meshStandardMaterial color="#dc143c" />
+              </mesh>
+              <mesh position={[0, 1.15, 0]} castShadow>
+                <sphereGeometry args={[0.12, 32, 32]} />
+                <meshStandardMaterial color="#c41e3a" />
+              </mesh>
+              <mesh position={[0, 1.17, 0]} castShadow>
+                <sphereGeometry args={[0.08, 32, 32]} />
+                <meshStandardMaterial color="#b22234" />
+              </mesh>
+
+              {/* Outer petals */}
+              {Array.from({ length: 6 }).map((_, i) => {
+                const petalAngle = (i / 6) * Math.PI * 2
+                const px = Math.cos(petalAngle) * 0.18
+                const pz = Math.sin(petalAngle) * 0.18
+                return (
+                  <mesh
+                    key={i}
+                    position={[px, 1.05, pz]}
+                    rotation={[0, petalAngle, Math.PI / 6]}
+                    castShadow
+                  >
+                    <sphereGeometry args={[0.1, 16, 16]} />
+                    <meshStandardMaterial color="#ff0040" />
+                  </mesh>
+                )
+              })}
+
+              {/* Label with donation name */}
+              <Text position={[0, 1.5, 0]} fontSize={0.12} color="white" anchorX="center">
+                {investment.name}
+              </Text>
+            </group>
+          )
+        })}
+
+      {/* Small lilies for currency investments */}
+      {investments
+        .filter((inv) => inv.type === "currency")
+        .map((investment, index) => {
+          // Radial positioning around the main lily
+          const angle = (index / Math.max(investments.filter((inv) => inv.type === "currency").length, 1)) * Math.PI * 2
+          const radius = 2.5
+          const x = 0 + Math.cos(angle) * radius
+          const z = -5 + Math.sin(angle) * radius
+
+          return (
+            <group
+              key={investment.id}
+              position={[x, 0, z]}
+              onClick={(e) => {
+                e.stopPropagation()
+                onInvestmentClick?.(investment)
+              }}
+              onPointerOver={(e) => {
+                e.stopPropagation()
+                document.body.style.cursor = "pointer"
+              }}
+              onPointerOut={(e) => {
+                e.stopPropagation()
+                document.body.style.cursor = "default"
+              }}
+            >
+              {/* Stem */}
+              <mesh position={[0, 0.5, 0]} castShadow>
+                <cylinderGeometry args={[0.04, 0.05, 1, 16]} />
+                <meshStandardMaterial color="#4a7c3e" />
+              </mesh>
+
+              {/* Lily center - yellow stamen */}
+              <mesh position={[0, 1.1, 0]} castShadow>
+                <cylinderGeometry args={[0.025, 0.025, 0.2, 8]} />
+                <meshStandardMaterial color="#ffd700" />
+              </mesh>
+
+              {/* Lily petals - 6 elongated petals */}
+              {Array.from({ length: 6 }).map((_, i) => {
+                const petalAngle = (i / 6) * Math.PI * 2
+                const px = Math.cos(petalAngle) * 0.2
+                const pz = Math.sin(petalAngle) * 0.2
+                return (
+                  <mesh
+                    key={i}
+                    position={[px, 1.05, pz]}
+                    rotation={[Math.PI / 3, petalAngle, 0]}
+                    castShadow
+                  >
+                    <boxGeometry args={[0.12, 0.03, 0.4]} />
+                    <meshStandardMaterial color="#9b59b6" />
+                  </mesh>
+                )
+              })}
+
+              {/* Inner petals for more depth */}
+              {Array.from({ length: 6 }).map((_, i) => {
+                const petalAngle = (i / 6) * Math.PI * 2 + Math.PI / 6
+                const px = Math.cos(petalAngle) * 0.12
+                const pz = Math.sin(petalAngle) * 0.12
+                return (
+                  <mesh
+                    key={`inner-${i}`}
+                    position={[px, 1.08, pz]}
+                    rotation={[Math.PI / 4, petalAngle, 0]}
+                    castShadow
+                  >
+                    <boxGeometry args={[0.1, 0.03, 0.3]} />
+                    <meshStandardMaterial color="#8e44ad" />
+                  </mesh>
+                )
+              })}
+
+              {/* Label with currency name */}
+              <Text position={[0, 1.5, 0]} fontSize={0.12} color="white" anchorX="center">
+                {investment.name}
+              </Text>
+            </group>
+          )
+        })}
+
       {/* Red Rose - to the left of fountain */}
       <group
         position={[-5, 0, 0]}

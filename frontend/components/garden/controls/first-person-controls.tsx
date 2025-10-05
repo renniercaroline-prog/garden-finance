@@ -85,8 +85,15 @@ export default function FirstPersonControls({ enabled = true }: FirstPersonContr
   }, [])
 
   useEffect(() => {
-    if (!enabled && controlsRef.current?.isLocked) {
-      controlsRef.current.unlock()
+    if (!enabled) {
+      // Force unlock pointer
+      if (controlsRef.current?.isLocked) {
+        controlsRef.current.unlock()
+      }
+      // Also try to exit pointer lock through the browser API
+      if (document.pointerLockElement) {
+        document.exitPointerLock()
+      }
     }
   }, [enabled])
 
