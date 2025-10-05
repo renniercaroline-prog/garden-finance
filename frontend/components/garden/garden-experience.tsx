@@ -1,7 +1,7 @@
 "use client"
 
 import { Canvas } from "@react-three/fiber"
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import GardenScene from "./garden-scene-working"
 import HUD from "./ui/hud"
 import LoadingScreen from "./ui/loading-screen"
@@ -17,11 +17,16 @@ import ProgressBar from "./ui/progress-bar"
 import QuestsPanel from "./ui/quests-panel"
 import AchievementsPanel from "./ui/achievements-panel"
 import LearningCenter from "./ui/learning-center"
+import FlowerPopup from "./ui/flower-popup"
 import { PortfolioProvider } from "@/context/portfolio-context"
 import { SocialProvider } from "@/context/social-context"
 import { GamificationProvider } from "@/context/gamification-context"
 
+type FlowerType = "startups" | "causes" | "currencies" | null
+
 export default function GardenExperience() {
+  const [activeFlower, setActiveFlower] = useState<FlowerType>(null)
+
   return (
     <PortfolioProvider>
       <SocialProvider>
@@ -29,11 +34,11 @@ export default function GardenExperience() {
           <div className="w-full h-screen relative">
             {/* 3D Canvas */}
             <div className="canvas-container">
-              <Canvas 
-                shadows 
-                camera={{ position: [0, 1.6, 5], fov: 75 }} 
-                gl={{ 
-                  antialias: true, 
+              <Canvas
+                shadows
+                camera={{ position: [0, 1.6, 5], fov: 75 }}
+                gl={{
+                  antialias: true,
                   alpha: false,
                   powerPreference: "high-performance",
                   preserveDrawingBuffer: true
@@ -44,7 +49,10 @@ export default function GardenExperience() {
                 }}
               >
                 <Suspense fallback={null}>
-                  <GardenScene />
+                  <GardenScene
+                    onFlowerClick={setActiveFlower}
+                    controlsEnabled={!activeFlower}
+                  />
                 </Suspense>
               </Canvas>
             </div>
@@ -66,6 +74,11 @@ export default function GardenExperience() {
               <LearningCenter />
               <div className="crosshair" />
             </div>
+
+            {/* Flower Popup */}
+            {activeFlower && (
+              <FlowerPopup flowerType={activeFlower} onClose={() => setActiveFlower(null)} />
+            )}
 
             {/* Loading Screen */}
             <LoadingScreen />

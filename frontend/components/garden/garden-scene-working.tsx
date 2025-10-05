@@ -107,15 +107,26 @@ function WaterFountain({ portfolioValue }: { portfolioValue: number }) {
         />
       </points>
 
-      {/* Portfolio value display */}
-      <Text position={[0, 2.5, 0]} fontSize={0.3} color="white" anchorX="center">
+      {/* Portfolio value display - on the front of the fountain */}
+      <Text
+        position={[0, 0.5, 1.5]}
+        fontSize={0.25}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+      >
         ${Math.round(portfolioValue).toLocaleString()}
       </Text>
     </group>
   )
 }
 
-export default function GardenScene() {
+interface GardenSceneProps {
+  onFlowerClick?: (flowerType: "startups" | "causes" | "currencies") => void
+  controlsEnabled?: boolean
+}
+
+export default function GardenScene({ onFlowerClick, controlsEnabled = true }: GardenSceneProps = {}) {
   const { portfolio } = usePortfolio()
 
   console.log("🌿 Garden Scene Rendering...")
@@ -165,7 +176,21 @@ export default function GardenScene() {
       {/* Portfolio Holdings removed - clean garden for new design */}
 
       {/* Sunflower - to the right of fountain */}
-      <group position={[5, 0, 0]}>
+      <group
+        position={[5, 0, 0]}
+        onClick={(e) => {
+          e.stopPropagation()
+          onFlowerClick?.("startups")
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = "pointer"
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = "default"
+        }}
+      >
         {/* Stem */}
         <mesh position={[0, 1, 0]} castShadow>
           <cylinderGeometry args={[0.1, 0.15, 2, 16]} />
@@ -195,10 +220,29 @@ export default function GardenScene() {
             </mesh>
           )
         })}
+
+        {/* Label */}
+        <Text position={[0, 3, 0]} fontSize={0.3} color="white" anchorX="center">
+          Startups
+        </Text>
       </group>
 
       {/* Red Rose - to the left of fountain */}
-      <group position={[-5, 0, 0]}>
+      <group
+        position={[-5, 0, 0]}
+        onClick={(e) => {
+          e.stopPropagation()
+          onFlowerClick?.("causes")
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = "pointer"
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = "default"
+        }}
+      >
         {/* Stem */}
         <mesh position={[0, 1, 0]} castShadow>
           <cylinderGeometry args={[0.08, 0.12, 2, 16]} />
@@ -236,10 +280,29 @@ export default function GardenScene() {
             </mesh>
           )
         })}
+
+        {/* Label */}
+        <Text position={[0, 3, 0]} fontSize={0.3} color="white" anchorX="center">
+          Causes
+        </Text>
       </group>
 
       {/* Purple Lily - to the back of fountain */}
-      <group position={[0, 0, -5]}>
+      <group
+        position={[0, 0, -5]}
+        onClick={(e) => {
+          e.stopPropagation()
+          onFlowerClick?.("currencies")
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = "pointer"
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation()
+          document.body.style.cursor = "default"
+        }}
+      >
         {/* Stem */}
         <mesh position={[0, 1, 0]} castShadow>
           <cylinderGeometry args={[0.08, 0.1, 2, 16]} />
@@ -287,18 +350,23 @@ export default function GardenScene() {
             </mesh>
           )
         })}
+
+        {/* Label */}
+        <Text position={[0, 3, 0]} fontSize={0.3} color="white" anchorX="center">
+          Currencies
+        </Text>
       </group>
 
       {/* Sky */}
-      <Sky 
-        distance={450000} 
-        sunPosition={[100, 20, 100]} 
-        inclination={0.6} 
+      <Sky
+        distance={450000}
+        sunPosition={[100, 20, 100]}
+        inclination={0.6}
         azimuth={0.25}
       />
 
       {/* Controls */}
-      <FirstPersonControls />
+      <FirstPersonControls enabled={controlsEnabled} />
     </>
   )
 }
