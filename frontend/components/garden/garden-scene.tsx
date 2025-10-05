@@ -11,6 +11,9 @@ import CryptoPlant from "./plants/crypto-plant"
 import REITBuilding from "./plants/reit-building"
 import Greenhouse from "./structures/greenhouse"
 import GardenHouse from "./structures/garden-house"
+import SerenityStatue from "./structures/statues/serenity-statue"
+import GrowthSpiralStatue from "./structures/statues/growth-spiral-statue"
+import BeaconObeliskStatue from "./structures/statues/beacon-obelisk-statue"
 import { usePortfolio } from "@/context/portfolio-context"
 
 export default function GardenScene() {
@@ -37,6 +40,11 @@ export default function GardenScene() {
         portfolioValue={portfolio.totalValue}
         dailyChange={portfolio.dailyChangePercent}
       />
+
+      {/* Garden statues */}
+      <SerenityStatue position={[-8, 0, 4]} />
+      <GrowthSpiralStatue position={[9, 0, 3]} />
+      <BeaconObeliskStatue position={[0, 0, -10]} />
 
       {/* Greenhouse for Crypto */}
       <Greenhouse position={[12, 0, -6]} />

@@ -1,19 +1,17 @@
 "use client"
 
-import type { GroupProps } from "@react-three/fiber"
-
-interface GardenHouseProps extends Omit<GroupProps, "position"> {
+interface GardenHouseProps {
   position: [number, number, number]
 }
 
-export default function GardenHouse({ position, ...groupProps }: GardenHouseProps) {
+export default function GardenHouse({ position }: GardenHouseProps) {
   // Rough proportions for a cozy entrance house with a gable-style roof
   const baseWidth = 5
   const baseHeight = 3
   const baseDepth = 4
 
   return (
-    <group position={position} {...groupProps}>
+    <group position={position}>
       {/* Main structure */}
       <mesh position={[0, baseHeight / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[baseWidth, baseHeight, baseDepth]} />

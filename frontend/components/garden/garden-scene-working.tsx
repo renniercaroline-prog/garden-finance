@@ -5,6 +5,10 @@ import { useFrame } from "@react-three/fiber"
 import FirstPersonControls from "./controls/first-person-controls"
 import GrassField from "./environment/grass-field"
 import GardenHouse from "./structures/garden-house"
+import type { StatueType } from "./ui/statue-popup"
+import SerenityStatue from "./structures/statues/serenity-statue"
+import GrowthSpiralStatue from "./structures/statues/growth-spiral-statue"
+import BeaconObeliskStatue from "./structures/statues/beacon-obelisk-statue"
 import { usePortfolio } from "@/context/portfolio-context"
 import type { Holding } from "@/lib/types"
 import * as THREE from "three"
@@ -172,9 +176,16 @@ interface GardenSceneProps {
   controlsEnabled?: boolean
   investments?: Investment[]
   onInvestmentClick?: (investment: Investment) => void
+  onStatueClick?: (statue: StatueType) => void
 }
 
-export default function GardenScene({ onFlowerClick, controlsEnabled = true, investments = [], onInvestmentClick }: GardenSceneProps = {}) {
+export default function GardenScene({
+  onFlowerClick,
+  controlsEnabled = true,
+  investments = [],
+  onInvestmentClick,
+  onStatueClick,
+}: GardenSceneProps = {}) {
   const { portfolio } = usePortfolio()
 
   console.log("🌿 Garden Scene Rendering...")
@@ -241,6 +252,11 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
 
       {/* Gate house outside the entrance */}
       <GardenHouse position={[0, 0, 22]} />
+
+      {/* Sculptures celebrating the garden themes */}
+      <SerenityStatue position={[-9, 0, 5]} onClick={() => onStatueClick?.("donation")} />
+      <GrowthSpiralStatue position={[10, 0, 4]} onClick={() => onStatueClick?.("startup")} />
+      <BeaconObeliskStatue position={[0, 0, -11]} onClick={() => onStatueClick?.("stocks")} />
 
       {/* Garden Fence */}
       {/* Front fence - left side of gate */}
