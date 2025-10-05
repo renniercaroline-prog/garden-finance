@@ -1,8 +1,119 @@
 "use client"
 import { Sky, Text, Html } from "@react-three/drei"
+import { useRef, useMemo } from "react"
+import { useFrame } from "@react-three/fiber"
 import FirstPersonControls from "./controls/first-person-controls"
 import { usePortfolio } from "@/context/portfolio-context"
 import type { Holding } from "@/lib/types"
+import * as THREE from "three"
+
+function WaterFountain({ portfolioValue }: { portfolioValue: number }) {
+  const waterParticlesRef = useRef<THREE.Points>(null)
+  const waterRef = useRef<THREE.Mesh>(null)
+
+  // Create water droplet particles
+  const particleCount = 100
+  const particles = useMemo(() => {
+    const positions = new Float32Array(particleCount * 3)
+    const velocities = new Float32Array(particleCount * 3)
+
+    for (let i = 0; i < particleCount; i++) {
+      const i3 = i * 3
+      // Start at fountain center
+      positions[i3] = 0
+      positions[i3 + 1] = 1
+      positions[i3 + 2] = 0
+
+      // Random velocity for water splash
+      const angle = Math.random() * Math.PI * 2
+      const speed = 0.5 + Math.random() * 1
+      velocities[i3] = Math.cos(angle) * speed
+      velocities[i3 + 1] = 2 + Math.random() * 2
+      velocities[i3 + 2] = Math.sin(angle) * speed
+    }
+
+    return { positions, velocities }
+  }, [])
+
+  useFrame((state, delta) => {
+    if (waterParticlesRef.current) {
+      const positions = waterParticlesRef.current.geometry.attributes.position.array as Float32Array
+      const velocities = particles.velocities
+
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3
+
+        // Update positions based on velocity
+        positions[i3] += velocities[i3] * delta
+        positions[i3 + 1] += velocities[i3 + 1] * delta
+        positions[i3 + 2] += velocities[i3 + 2] * delta
+
+        // Apply gravity
+        velocities[i3 + 1] -= 9.8 * delta
+
+        // Reset particle if it falls below fountain
+        if (positions[i3 + 1] < 0.5) {
+          positions[i3] = (Math.random() - 0.5) * 0.3
+          positions[i3 + 1] = 1.2
+          positions[i3 + 2] = (Math.random() - 0.5) * 0.3
+
+          const angle = Math.random() * Math.PI * 2
+          const speed = 0.5 + Math.random() * 1
+          velocities[i3] = Math.cos(angle) * speed
+          velocities[i3 + 1] = 2 + Math.random() * 2
+          velocities[i3 + 2] = Math.sin(angle) * speed
+        }
+      }
+
+      waterParticlesRef.current.geometry.attributes.position.needsUpdate = true
+    }
+
+    // Animate water level
+    if (waterRef.current) {
+      waterRef.current.position.y = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.05
+    }
+  })
+
+  return (
+    <group position={[0, 0, 0]}>
+      {/* Fountain base */}
+      <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[1.5, 1.5, 1, 32]} />
+        <meshStandardMaterial color="#888888" />
+      </mesh>
+
+      {/* Water */}
+      <mesh ref={waterRef} position={[0, 1, 0]}>
+        <cylinderGeometry args={[1.4, 1.4, 0.2, 32]} />
+        <meshStandardMaterial color="#4a9eff" transparent opacity={0.7} />
+      </mesh>
+
+      {/* Water particles */}
+      <points ref={waterParticlesRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={particleCount}
+            array={particles.positions}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.1}
+          color="#4a9eff"
+          transparent
+          opacity={0.6}
+          sizeAttenuation
+        />
+      </points>
+
+      {/* Portfolio value display */}
+      <Text position={[0, 2.5, 0]} fontSize={0.3} color="white" anchorX="center">
+        ${Math.round(portfolioValue).toLocaleString()}
+      </Text>
+    </group>
+  )
+}
 
 export default function GardenScene() {
   const { portfolio } = usePortfolio()
@@ -48,20 +159,8 @@ export default function GardenScene() {
         </mesh>
       </group>
 
-      {/* Central Fountain */}
-      <group position={[0, 0, 0]}>
-        <mesh position={[0, 0.5, 0]} castShadow>
-          <cylinderGeometry args={[1.5, 1.5, 1, 32]} />
-          <meshStandardMaterial color="#888888" />
-        </mesh>
-        <mesh position={[0, 1, 0]}>
-          <cylinderGeometry args={[1.4, 1.4, 0.2, 32]} />
-          <meshStandardMaterial color="#4a9eff" transparent opacity={0.7} />
-        </mesh>
-        <Text position={[0, 2, 0]} fontSize={0.3} color="white" anchorX="center">
-          ${Math.round(portfolio.totalValue).toLocaleString()}
-        </Text>
-      </group>
+      {/* Animated Water Fountain */}
+      <WaterFountain portfolioValue={portfolio.totalValue} />
 
       {/* Portfolio Holdings removed - clean garden for new design */}
 
