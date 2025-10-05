@@ -1,11 +1,49 @@
 "use client"
-import { Sky, Text, Html } from "@react-three/drei"
+import { Sky, Text, Html, Cloud } from "@react-three/drei"
 import { useRef, useMemo } from "react"
 import { useFrame } from "@react-three/fiber"
 import FirstPersonControls from "./controls/first-person-controls"
 import { usePortfolio } from "@/context/portfolio-context"
 import type { Holding } from "@/lib/types"
 import * as THREE from "three"
+
+function Sun() {
+  return (
+    <group position={[50, 40, -30]}>
+      {/* Sun sphere */}
+      <mesh>
+        <sphereGeometry args={[8, 32, 32]} />
+        <meshBasicMaterial color="#FDB813" />
+      </mesh>
+      {/* Sun glow */}
+      <pointLight color="#FDB813" intensity={2} distance={100} />
+    </group>
+  )
+}
+
+function MovingClouds() {
+  const cloudsRef = useRef<THREE.Group>(null)
+
+  useFrame((state, delta) => {
+    if (cloudsRef.current) {
+      cloudsRef.current.position.x += delta * 2
+      // Reset position when clouds move too far
+      if (cloudsRef.current.position.x > 100) {
+        cloudsRef.current.position.x = -100
+      }
+    }
+  })
+
+  return (
+    <group ref={cloudsRef}>
+      <Cloud position={[0, 35, -20]} speed={0.2} opacity={0.5} />
+      <Cloud position={[30, 38, -25]} speed={0.2} opacity={0.4} />
+      <Cloud position={[-30, 40, -30]} speed={0.2} opacity={0.6} />
+      <Cloud position={[50, 36, -15]} speed={0.2} opacity={0.5} />
+      <Cloud position={[-50, 42, -35]} speed={0.2} opacity={0.4} />
+    </group>
+  )
+}
 
 function WaterFountain({ portfolioValue }: { portfolioValue: number }) {
   const waterParticlesRef = useRef<THREE.Points>(null)
@@ -177,6 +215,220 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
           <meshStandardMaterial color="#8B4513" />
         </mesh>
       </group>
+
+      {/* Garden Fence */}
+      {/* Front fence - left side of gate */}
+      <group>
+        {Array.from({ length: 15 }).map((_, i) => (
+          <mesh key={`front-left-${i}`} position={[-5 - i * 1.2, 1.5, 15]} castShadow>
+            <boxGeometry args={[0.2, 3, 0.2]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Front fence - right side of gate */}
+      <group>
+        {Array.from({ length: 15 }).map((_, i) => (
+          <mesh key={`front-right-${i}`} position={[5 + i * 1.2, 1.5, 15]} castShadow>
+            <boxGeometry args={[0.2, 3, 0.2]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Left fence */}
+      <group>
+        {Array.from({ length: 25 }).map((_, i) => (
+          <mesh key={`left-${i}`} position={[-23, 1.5, 15 - i * 1.2]} castShadow>
+            <boxGeometry args={[0.2, 3, 0.2]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Right fence */}
+      <group>
+        {Array.from({ length: 25 }).map((_, i) => (
+          <mesh key={`right-${i}`} position={[23, 1.5, 15 - i * 1.2]} castShadow>
+            <boxGeometry args={[0.2, 3, 0.2]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Back fence */}
+      <group>
+        {Array.from({ length: 40 }).map((_, i) => (
+          <mesh key={`back-${i}`} position={[-23 + i * 1.2, 1.5, -15]} castShadow>
+            <boxGeometry args={[0.2, 3, 0.2]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Fence horizontal rails */}
+      {/* Front left rail */}
+      <mesh position={[-12.5, 2.5, 15]} castShadow>
+        <boxGeometry args={[18, 0.15, 0.15]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      {/* Front right rail */}
+      <mesh position={[12.5, 2.5, 15]} castShadow>
+        <boxGeometry args={[18, 0.15, 0.15]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      {/* Left rail */}
+      <mesh position={[-23, 2.5, 0]} castShadow>
+        <boxGeometry args={[0.15, 0.15, 30]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      {/* Right rail */}
+      <mesh position={[23, 2.5, 0]} castShadow>
+        <boxGeometry args={[0.15, 0.15, 30]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      {/* Back rail */}
+      <mesh position={[0, 2.5, -15]} castShadow>
+        <boxGeometry args={[48, 0.15, 0.15]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+
+      {/* Pine Trees along the fence */}
+      {/* Front left trees */}
+      {Array.from({ length: 8 }).map((_, i) => {
+        const x = -10 - i * 3
+        return (
+          <group key={`tree-front-left-${i}`} position={[x, 0, 13]}>
+            {/* Trunk */}
+            <mesh position={[0, 2, 0]} castShadow>
+              <cylinderGeometry args={[0.3, 0.4, 4, 8]} />
+              <meshStandardMaterial color="#4a3728" />
+            </mesh>
+            {/* Pine layers */}
+            <mesh position={[0, 4.5, 0]} castShadow>
+              <coneGeometry args={[2, 3, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 6.5, 0]} castShadow>
+              <coneGeometry args={[1.5, 2.5, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 8, 0]} castShadow>
+              <coneGeometry args={[1, 2, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* Front right trees */}
+      {Array.from({ length: 8 }).map((_, i) => {
+        const x = 10 + i * 3
+        return (
+          <group key={`tree-front-right-${i}`} position={[x, 0, 13]}>
+            {/* Trunk */}
+            <mesh position={[0, 2, 0]} castShadow>
+              <cylinderGeometry args={[0.3, 0.4, 4, 8]} />
+              <meshStandardMaterial color="#4a3728" />
+            </mesh>
+            {/* Pine layers */}
+            <mesh position={[0, 4.5, 0]} castShadow>
+              <coneGeometry args={[2, 3, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 6.5, 0]} castShadow>
+              <coneGeometry args={[1.5, 2.5, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 8, 0]} castShadow>
+              <coneGeometry args={[1, 2, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* Left side trees */}
+      {Array.from({ length: 10 }).map((_, i) => {
+        const z = 12 - i * 3
+        return (
+          <group key={`tree-left-${i}`} position={[-21, 0, z]}>
+            {/* Trunk */}
+            <mesh position={[0, 2, 0]} castShadow>
+              <cylinderGeometry args={[0.3, 0.4, 4, 8]} />
+              <meshStandardMaterial color="#4a3728" />
+            </mesh>
+            {/* Pine layers */}
+            <mesh position={[0, 4.5, 0]} castShadow>
+              <coneGeometry args={[2, 3, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 6.5, 0]} castShadow>
+              <coneGeometry args={[1.5, 2.5, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 8, 0]} castShadow>
+              <coneGeometry args={[1, 2, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* Right side trees */}
+      {Array.from({ length: 10 }).map((_, i) => {
+        const z = 12 - i * 3
+        return (
+          <group key={`tree-right-${i}`} position={[21, 0, z]}>
+            {/* Trunk */}
+            <mesh position={[0, 2, 0]} castShadow>
+              <cylinderGeometry args={[0.3, 0.4, 4, 8]} />
+              <meshStandardMaterial color="#4a3728" />
+            </mesh>
+            {/* Pine layers */}
+            <mesh position={[0, 4.5, 0]} castShadow>
+              <coneGeometry args={[2, 3, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 6.5, 0]} castShadow>
+              <coneGeometry args={[1.5, 2.5, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 8, 0]} castShadow>
+              <coneGeometry args={[1, 2, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* Back trees */}
+      {Array.from({ length: 15 }).map((_, i) => {
+        const x = -21 + i * 3
+        return (
+          <group key={`tree-back-${i}`} position={[x, 0, -13]}>
+            {/* Trunk */}
+            <mesh position={[0, 2, 0]} castShadow>
+              <cylinderGeometry args={[0.3, 0.4, 4, 8]} />
+              <meshStandardMaterial color="#4a3728" />
+            </mesh>
+            {/* Pine layers */}
+            <mesh position={[0, 4.5, 0]} castShadow>
+              <coneGeometry args={[2, 3, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 6.5, 0]} castShadow>
+              <coneGeometry args={[1.5, 2.5, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+            <mesh position={[0, 8, 0]} castShadow>
+              <coneGeometry args={[1, 2, 8]} />
+              <meshStandardMaterial color="#2d5016" />
+            </mesh>
+          </group>
+        )
+      })}
 
       {/* Animated Water Fountain */}
       <WaterFountain portfolioValue={portfolio.totalValue} />
@@ -593,6 +845,12 @@ export default function GardenScene({ onFlowerClick, controlsEnabled = true, inv
         inclination={0.6}
         azimuth={0.25}
       />
+
+      {/* Sun */}
+      <Sun />
+
+      {/* Moving Clouds */}
+      <MovingClouds />
 
       {/* Controls */}
       <FirstPersonControls enabled={controlsEnabled} />
