@@ -10,6 +10,7 @@ import Tree from "./plants/tree"
 import CryptoPlant from "./plants/crypto-plant"
 import REITBuilding from "./plants/reit-building"
 import Greenhouse from "./structures/greenhouse"
+import GardenHouse from "./structures/garden-house"
 import { usePortfolio } from "@/context/portfolio-context"
 
 export default function GardenScene() {
@@ -30,6 +31,7 @@ export default function GardenScene() {
 
       {/* Garden Structures */}
       <EntryGate position={[0, 0, 15]} />
+      <GardenHouse position={[0, 0, 21]} />
       <CentralFountain
         position={[0, 0, 0]}
         portfolioValue={portfolio.totalValue}

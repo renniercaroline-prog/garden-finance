@@ -2,6 +2,7 @@
 
 import { useRef } from "react"
 import type { Mesh } from "three"
+import GrassField from "./grass-field"
 
 export default function Terrain() {
   const meshRef = useRef<Mesh>(null)
@@ -9,10 +10,19 @@ export default function Terrain() {
   return (
     <group>
       {/* Main grass terrain */}
-      <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[100, 100, 50, 50]} />
-        <meshStandardMaterial color="#6b8e4e" roughness={0.9} metalness={0.1} />
+        <meshStandardMaterial color="#3f5f2a" roughness={1} metalness={0.05} />
       </mesh>
+
+      <GrassField
+        size={80}
+        bladeCount={1500}
+        clearings={[
+          { x: 0, z: 0, width: 4, depth: 32 },
+          { x: 0, z: -5, width: 4, depth: 32 },
+        ]}
+      />
 
       {/* Garden paths */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
