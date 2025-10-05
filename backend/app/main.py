@@ -47,4 +47,3 @@ app.include_router(clubs_extras.router)
 app.include_router(startups.router)
 app.include_router(donations.router)
 app.include_router(yahoo.router)
-
